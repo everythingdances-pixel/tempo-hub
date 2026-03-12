@@ -1380,21 +1380,28 @@
     reader.onloadend = function() {
       var base64 = reader.result.split(',')[1];
 
-      api('/api/whisper', {
+      fetch('/api/whisper', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base64: base64, mimeType: mimeType })
-      }).then(function(data) {
-        if (data.text) {
-          ta.value = data.text;
+      }).then(function(r) {
+        return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; });
+      }).then(function(result) {
+        if (result.ok && result.data.text) {
+          ta.value = result.data.text;
           res.style.display = 'flex';
           lbl.textContent = 'Tap to re-record';
-        } else {
+        } else if (result.ok) {
           lbl.textContent = 'No speech detected — tap to retry';
+        } else {
+          console.error('Whisper API error:', result.status, result.data);
+          lbl.textContent = 'Error — tap to retry';
+          showToast(result.data.error || 'Transcription failed');
         }
       }).catch(function(err) {
         console.error('Whisper error:', err);
-        lbl.textContent = 'Transcription failed — tap to retry';
-        showToast('Transcription error');
+        lbl.textContent = 'Error — tap to retry';
+        showToast('Network error');
       });
     };
     reader.readAsDataURL(blob);

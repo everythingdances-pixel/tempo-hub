@@ -21,55 +21,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing base64 audio data' });
   }
 
-  const ext = (mimeType || 'audio/webm').split('/')[1].split(';')[0] || 'webm';
+  const mime = mimeType || 'audio/webm';
+  const ext = mime.split('/')[1].split(';')[0] || 'webm';
   const filename = 'voice.' + ext;
 
-  // Convert base64 to buffer
+  // Convert base64 to buffer then to Blob for FormData
   const buffer = Buffer.from(base64, 'base64');
+  const blob = new Blob([buffer], { type: mime });
 
-  // Build multipart form data manually for Whisper API
-  const boundary = '----WhisperBoundary' + Date.now();
-  const parts = [];
-
-  // File part
-  parts.push(
-    '--' + boundary + '\r\n' +
-    'Content-Disposition: form-data; name="file"; filename="' + filename + '"\r\n' +
-    'Content-Type: ' + (mimeType || 'audio/webm') + '\r\n\r\n'
-  );
-  parts.push(buffer);
-  parts.push('\r\n');
-
-  // Model part
-  parts.push(
-    '--' + boundary + '\r\n' +
-    'Content-Disposition: form-data; name="model"\r\n\r\n' +
-    'whisper-1\r\n'
-  );
-
-  // Language hint (optional, helps accuracy)
-  parts.push(
-    '--' + boundary + '\r\n' +
-    'Content-Disposition: form-data; name="language"\r\n\r\n' +
-    'en\r\n'
-  );
-
-  parts.push('--' + boundary + '--\r\n');
-
-  // Combine into single buffer
-  const bodyParts = parts.map(function(p) {
-    return typeof p === 'string' ? Buffer.from(p) : p;
-  });
-  const body = Buffer.concat(bodyParts);
+  const formData = new FormData();
+  formData.append('file', blob, filename);
+  formData.append('model', 'whisper-1');
+  formData.append('language', 'en');
 
   try {
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + OPENAI_API_KEY,
-        'Content-Type': 'multipart/form-data; boundary=' + boundary,
       },
-      body: body,
+      body: formData,
     });
 
     if (!response.ok) {
