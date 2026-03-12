@@ -216,6 +216,11 @@
   }
   .mic-btn svg { width: 22px; height: 22px; stroke: var(--ghost); }
   .voice-lbl { font-size: 11px; color: var(--ghost); }
+  .voice-timer {
+    font-size: 22px; font-weight: 700; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
   .voice-res {
     display: none;
     border-top: 1px solid var(--border);
@@ -801,6 +806,7 @@
         <!-- Voice -->
         <div class="panel" id="pVoice">
         <div class="voice-wrap">
+          <div class="voice-timer" id="voiceTimer" style="display:none">0:00</div>
           <div class="mic-btn" id="micBtn" onclick="toggleVoice()">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
           </div>
@@ -1138,6 +1144,12 @@
     document.getElementById('voiceRes').style.display = 'none';
     document.getElementById('voiceTa').value = '';
     document.getElementById('voiceLbl').textContent = 'Tap to record';
+    document.getElementById('voiceTimer').style.display = 'none';
+    if (voiceOn && mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    voiceOn = false;
+    clearInterval(voiceTimerInterval);
     ['cam','gal'].forEach(function(t) {
       document.getElementById(t+'Img').style.display = 'none';
       document.getElementById(t+'Ph').style.display = 'flex';
@@ -1263,44 +1275,129 @@
     document.getElementById('inputCardLabel').textContent = labels[m] || 'Add task';
   }
 
-  /* ── Voice — Web Speech API ── */
+  /* ── Voice — MediaRecorder + Whisper ── */
+  var mediaRecorder = null;
+  var audioChunks = [];
+  var voiceTimerInterval = null;
+  var voiceStartTime = 0;
+
+  function formatTime(sec) {
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
   function toggleVoice() {
     var btn = document.getElementById('micBtn');
     var lbl = document.getElementById('voiceLbl');
     var res = document.getElementById('voiceRes');
+    var timer = document.getElementById('voiceTimer');
 
+    // Stop recording
     if (voiceOn) {
       voiceOn = false;
-      if (recognition) recognition.stop();
-      btn.className = 'mic-btn'; lbl.textContent = 'Tap to record';
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      btn.className = 'mic-btn';
+      lbl.textContent = 'Transcribing…';
+      clearInterval(voiceTimerInterval);
       return;
     }
 
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { showToast('Voice not supported'); return; }
+    // Start recording
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Microphone not supported'); return;
+    }
 
     voiceOn = true;
-    btn.className = 'mic-btn rec'; lbl.textContent = 'Recording…'; res.style.display = 'none';
+    audioChunks = [];
+    btn.className = 'mic-btn rec';
+    lbl.textContent = 'Recording — tap to stop';
+    res.style.display = 'none';
+    timer.style.display = 'block';
+    timer.textContent = '0:00';
+    voiceStartTime = Date.now();
 
-    recognition = new SR();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-AU';
+    voiceTimerInterval = setInterval(function() {
+      var elapsed = Math.floor((Date.now() - voiceStartTime) / 1000);
+      timer.textContent = formatTime(elapsed);
+    }, 1000);
 
-    recognition.onresult = function(e) {
-      var transcript = e.results[0][0].transcript;
-      document.getElementById('voiceTa').value = transcript;
-      res.style.display = 'flex';
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+      // Pick best supported format
+      var mimeType = 'audio/webm';
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      }
+
+      mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+
+      mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = function() {
+        // Stop all tracks to release mic
+        stream.getTracks().forEach(function(t) { t.stop(); });
+        timer.style.display = 'none';
+
+        if (!audioChunks.length) {
+          lbl.textContent = 'Tap to record';
+          return;
+        }
+
+        var blob = new Blob(audioChunks, { type: mimeType });
+        transcribeAudio(blob, mimeType);
+      };
+
+      mediaRecorder.start(1000); // collect chunks every second
+    }).catch(function(err) {
+      voiceOn = false;
+      clearInterval(voiceTimerInterval);
+      timer.style.display = 'none';
+      btn.className = 'mic-btn';
+      if (err.name === 'NotAllowedError') {
+        lbl.textContent = 'Mic access denied';
+      } else {
+        lbl.textContent = 'Tap to record';
+        showToast('Mic error: ' + err.message);
+      }
+    });
+  }
+
+  function transcribeAudio(blob, mimeType) {
+    var lbl = document.getElementById('voiceLbl');
+    var res = document.getElementById('voiceRes');
+    var ta = document.getElementById('voiceTa');
+
+    lbl.textContent = 'Transcribing…';
+
+    // Convert blob to base64
+    var reader = new FileReader();
+    reader.onloadend = function() {
+      var base64 = reader.result.split(',')[1];
+
+      api('/api/whisper', {
+        method: 'POST',
+        body: JSON.stringify({ base64: base64, mimeType: mimeType })
+      }).then(function(data) {
+        if (data.text) {
+          ta.value = data.text;
+          res.style.display = 'flex';
+          lbl.textContent = 'Tap to re-record';
+        } else {
+          lbl.textContent = 'No speech detected — tap to retry';
+        }
+      }).catch(function(err) {
+        console.error('Whisper error:', err);
+        lbl.textContent = 'Transcription failed — tap to retry';
+        showToast('Transcription error');
+      });
     };
-    recognition.onend = function() {
-      voiceOn = false; btn.className = 'mic-btn';
-      lbl.textContent = res.style.display === 'flex' ? 'Tap to re-record' : 'Tap to record';
-    };
-    recognition.onerror = function(e) {
-      voiceOn = false; btn.className = 'mic-btn';
-      lbl.textContent = e.error === 'not-allowed' ? 'Mic access denied' : 'Tap to record';
-    };
-    recognition.start();
+    reader.readAsDataURL(blob);
   }
 
   /* ── Image preview ── */
