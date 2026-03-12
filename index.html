@@ -1772,7 +1772,7 @@
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
         var cName = c.created_by ? c.created_by.charAt(0).toUpperCase() + c.created_by.slice(1) : '';
         html += '<div class="comment">' +
-          '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span> ' + esc(cName) + '</div>' +
+          '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
           '<div class="comment-body">' + esc(c.body) + '</div>' +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
         '</div>';
