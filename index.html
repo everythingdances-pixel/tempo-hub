@@ -277,6 +277,45 @@
 
   input[type=file] { display: none; }
 
+  /* Claude toggle */
+  .claude-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 2px 0 4px;
+  }
+  .claude-toggle-lbl {
+    font-size: 10px; color: var(--sub);
+    letter-spacing: 0.03em;
+  }
+  .claude-toggle-lbl.on { color: var(--ink); font-weight: 700; }
+  .toggle-track {
+    width: 36px; height: 20px;
+    background: var(--surface-dk); border-radius: 10px;
+    position: relative; cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--ink); }
+  .toggle-knob {
+    width: 16px; height: 16px;
+    background: white; border-radius: 50%;
+    position: absolute; top: 2px; left: 2px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on .toggle-knob { left: 18px; }
+
+  /* Copy button on feed card */
+  .copy-btn {
+    position: absolute; top: 14px; right: 24px;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ghost);
+    background: none; border: none;
+    transition: color 0.15s;
+  }
+  .copy-btn:hover { color: var(--ink); }
+  .copy-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
   .send-btn {
     width: 100%; padding: 14px;
     background: var(--ink); color: #fff;
@@ -363,7 +402,7 @@
     font-family: Arial, sans-serif;
     font-size: 11px; font-weight: 400; line-height: 1.55;
     color: var(--ink); margin-bottom: 4px;
-    padding-right: 24px;
+    padding-right: 44px;
   }
   .item-text.struck { text-decoration: line-through; color: var(--ghost); }
 
@@ -795,6 +834,13 @@
 
       </div><!-- /input-card -->
 
+      <div class="claude-toggle">
+        <div class="toggle-track on" id="claudeToggle" onclick="toggleClaude()">
+          <div class="toggle-knob"></div>
+        </div>
+        <span class="claude-toggle-lbl on" id="claudeToggleLbl">Process with Claude</span>
+      </div>
+
       <button class="send-btn" onclick="sendCapture()">Send to feed</button>
 
     </div>
@@ -849,6 +895,14 @@
   var curAssignee = localStorage.getItem('tempoUser') || '';
   var recognition = null;
   var voiceOn = false;
+  var claudeOn = true;
+
+  function toggleClaude() {
+    claudeOn = !claudeOn;
+    document.getElementById('claudeToggle').className = claudeOn ? 'toggle-track on' : 'toggle-track';
+    document.getElementById('claudeToggleLbl').className = claudeOn ? 'claude-toggle-lbl on' : 'claude-toggle-lbl';
+    document.getElementById('claudeToggleLbl').textContent = claudeOn ? 'Process with Claude' : 'Send raw — no Claude';
+  }
 
   /* ── User identity ── */
   function pickUser(name) {
@@ -968,6 +1022,7 @@
           (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
         '</div>' +
+        '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
           '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' +
@@ -1033,13 +1088,16 @@
     /* Step 1: Upload image if present */
     uploadImage(imgEl).then(function(url) {
       imageUrl = url;
-      /* Step 2: Claude triage */
-      return api('/api/claude', {
-        method: 'POST',
-        body: JSON.stringify({ input: rawInput })
-      }).catch(function() {
-        return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
-      });
+      /* Step 2: Claude triage (if toggle on) */
+      if (claudeOn) {
+        return api('/api/claude', {
+          method: 'POST',
+          body: JSON.stringify({ input: rawInput })
+        }).catch(function() {
+          return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
+        });
+      }
+      return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
     }).then(function(triaged) {
       /* Step 3: Save to Supabase */
       var task = {
@@ -1079,6 +1137,23 @@
     });
     document.getElementById('camCtx').value = '';
     document.getElementById('galCtx').value = '';
+  }
+
+  /* ── Copy task text ── */
+  function copyTask(id) {
+    var t = tasks.find(function(t) { return t.id === id; });
+    if (!t) return;
+    var text = t.body || '';
+    if (t.actions && t.actions.length) {
+      text += '\n\nActions:\n' + t.actions.map(function(a) { return '- ' + a; }).join('\n');
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Copied');
+      }).catch(function() { showToast('Copy failed'); });
+    } else {
+      showToast('Copy not supported');
+    }
   }
 
   /* ── CRUD operations ── */
