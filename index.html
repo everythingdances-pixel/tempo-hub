@@ -322,6 +322,7 @@
     position: relative;
   }
   .item:hover { background: var(--yellow); }
+  .item.commented { border-left-color: #2563eb; }
   .item.urg { border-left-color: var(--red); }
   .item.done { opacity: 0.3; border-left-color: #d0d0d0; }
   .item.done:hover { background: #f7f7f7; }
@@ -559,7 +560,7 @@
 
   /* ── DETAIL / THREAD VIEW ── */
   .detail-view {
-    display: none; position: absolute; inset: 0;
+    display: none; flex: 1;
     background: var(--bg); z-index: 60;
     flex-direction: column; overflow: hidden;
   }
@@ -567,7 +568,7 @@
 
   .detail-hdr {
     display: flex; align-items: center; gap: 10px;
-    padding: 52px 20px 14px; flex-shrink: 0;
+    padding: 10px 20px; flex-shrink: 0;
     border-bottom: 1px solid var(--border);
   }
   .detail-back {
@@ -620,7 +621,8 @@
   }
   .comment-by {
     font-size: 9px; font-weight: 700; color: var(--ink);
-    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px;
+    display: flex; align-items: center;
   }
   .comment-body {
     font-size: 11px; line-height: 1.55; color: var(--ink);
@@ -784,6 +786,22 @@
     </div>
   </div>
 
+  <!-- DETAIL / THREAD VIEW -->
+  <div class="detail-view" id="detailView">
+    <div class="detail-hdr">
+      <button class="detail-back" onclick="closeDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="detail-scroll" id="detailScroll"></div>
+    <div class="detail-input">
+      <textarea class="detail-ta" id="commentTa" placeholder="Add a comment…" rows="1"></textarea>
+      <button class="detail-send" onclick="postComment()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
   <!-- FAB -->
   <div class="fab" id="fab" onclick="event.stopPropagation(); goView('capture')">
     <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -794,23 +812,6 @@
     <button class="lb-close" onclick="closeLightbox()">✕</button>
     <img id="lbImg" src="" alt="">
     <div class="lb-caption" id="lbCaption"></div>
-  </div>
-
-  <!-- DETAIL / THREAD VIEW -->
-  <div class="detail-view" id="detailView">
-    <div class="detail-hdr">
-      <button class="detail-back" onclick="closeDetail()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div class="detail-title">Task thread</div>
-    </div>
-    <div class="detail-scroll" id="detailScroll"></div>
-    <div class="detail-input">
-      <textarea class="detail-ta" id="commentTa" placeholder="Add a comment…" rows="1"></textarea>
-      <button class="detail-send" onclick="postComment()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -868,6 +869,13 @@
   function loadTasks() {
     return api('/api/tasks').then(function(data) {
       tasks = data;
+      // Fetch all comments to flag tasks that have been commented on
+      return api('/api/comments?all=true').then(function(comments) {
+        var commentedIds = {};
+        comments.forEach(function(c) { commentedIds[c.task_id] = true; });
+        tasks.forEach(function(t) { t.has_comments = !!commentedIds[t.id]; });
+      }).catch(function() { /* ignore — just won't show blue borders */ });
+    }).then(function() {
       renderFeed();
     }).catch(function(err) {
       console.error('Load error:', err);
@@ -917,14 +925,12 @@
 
     var editBtn = !t.done ? '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' : '';
 
-    var authorInitial = t.created_by ? t.created_by.charAt(0).toUpperCase() : '?';
-    var authorName = t.created_by ? t.created_by.charAt(0).toUpperCase() + t.created_by.slice(1) : 'Unknown';
+    var commentCls = t.has_comments ? ' commented' : '';
 
-    return '<div class="item' + urgCls + doneCls + '" data-id="' + t.id + '">' +
+    return '<div class="item' + urgCls + doneCls + commentCls + '" data-id="' + t.id + '">' +
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
-        '<div class="item-author"><span class="avatar-xs">' + authorInitial + '</span>' + authorName + '</div>' +
         '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
         '<span class="item-time">' + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<div class="item-tags">' +
@@ -1255,7 +1261,10 @@
       '<div class="comments-lbl">Comments</div>' +
       '<div id="commentsList"><div class="no-comments">Loading…</div></div>';
 
+    document.getElementById('vCapture').className = 'view';
+    document.getElementById('vFeed').className = 'view';
     document.getElementById('detailView').classList.add('open');
+    document.getElementById('fab').className = 'fab';
     document.getElementById('commentTa').value = '';
     loadComments(id);
   }
@@ -1263,6 +1272,7 @@
   function closeDetail() {
     document.getElementById('detailView').classList.remove('open');
     activeTaskId = null;
+    goView('feed');
   }
 
   function loadComments(taskId) {
@@ -1274,8 +1284,9 @@
       }
       var html = '';
       comments.forEach(function(c) {
+        var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
         html += '<div class="comment">' +
-          '<div class="comment-by">' + esc(c.created_by || 'Unknown') + '</div>' +
+          '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
           '<div class="comment-body">' + esc(c.body) + '</div>' +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
         '</div>';

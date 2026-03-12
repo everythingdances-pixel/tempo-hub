@@ -18,14 +18,19 @@ export default async function handler(req, res) {
   }
 
   // GET /api/comments?task_id=<uuid> — list comments for a task
+  // GET /api/comments?all=true — list all comments (for checking which tasks have comments)
   if (req.method === 'GET') {
-    const { task_id } = req.query;
-    if (!task_id) return res.status(400).json({ error: 'Missing task_id' });
+    const { task_id, all } = req.query;
 
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/comments?task_id=eq.${task_id}&order=created_at.asc`,
-      { headers: headers() }
-    );
+    let url;
+    if (all === 'true') {
+      url = `${SUPABASE_URL}/rest/v1/comments?select=task_id&order=created_at.desc`;
+    } else {
+      if (!task_id) return res.status(400).json({ error: 'Missing task_id' });
+      url = `${SUPABASE_URL}/rest/v1/comments?task_id=eq.${task_id}&order=created_at.asc`;
+    }
+
+    const r = await fetch(url, { headers: headers() });
     const body = await r.json().catch(() => null);
     if (!r.ok) return res.status(r.status).json({ error: 'Read error', detail: body });
     return res.status(200).json(body);
