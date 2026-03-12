@@ -460,6 +460,106 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   ::-webkit-scrollbar { width: 0; }
+
+  /* ── DETAIL / THREAD VIEW ── */
+  .detail-view {
+    display: none; position: absolute; inset: 0;
+    background: var(--bg); z-index: 60;
+    flex-direction: column; overflow: hidden;
+  }
+  .detail-view.open { display: flex; }
+
+  .detail-hdr {
+    display: flex; align-items: center; gap: 10px;
+    padding: 52px 20px 14px; flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-back {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface); border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+  }
+  .detail-back:hover { background: var(--yellow); }
+  .detail-back svg { width: 16px; height: 16px; stroke: var(--ink); }
+  .detail-title {
+    font-size: 11px; font-weight: 700; color: var(--ink);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .detail-scroll {
+    flex: 1; overflow-y: auto; padding: 18px 20px 12px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .detail-task {
+    padding: 14px 16px;
+    background: #f7f7f7; border-left: 4px solid var(--ink);
+    border-radius: var(--radius);
+  }
+  .detail-task.urg { border-left-color: var(--red); }
+  .detail-task-body {
+    font-size: 12px; line-height: 1.6; color: var(--ink); margin-bottom: 8px;
+  }
+  .detail-task-meta {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  }
+  .detail-task-meta .tag { font-size: 8px; }
+  .detail-task-time {
+    font-size: 10px; color: var(--ghost);
+  }
+  .detail-task-thumb {
+    width: 100%; border-radius: 6px; margin-bottom: 10px; cursor: pointer;
+  }
+
+  .comments-lbl {
+    font-size: 9px; font-weight: 400; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding-top: 4px;
+  }
+
+  .comment {
+    padding: 10px 14px;
+    background: var(--surface); border-radius: 10px;
+  }
+  .comment-by {
+    font-size: 9px; font-weight: 700; color: var(--ink);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px;
+  }
+  .comment-body {
+    font-size: 11px; line-height: 1.55; color: var(--ink);
+  }
+  .comment-time {
+    font-size: 9px; color: var(--ghost); margin-top: 4px;
+  }
+
+  .no-comments {
+    font-size: 11px; color: var(--ghost); font-style: italic;
+    text-align: center; padding: 16px 0;
+  }
+
+  .detail-input {
+    display: flex; gap: 8px; padding: 12px 20px 28px;
+    border-top: 1px solid var(--border); flex-shrink: 0;
+    background: var(--bg);
+  }
+  .detail-ta {
+    flex: 1; min-height: 36px; max-height: 80px;
+    background: var(--surface); border: none; border-radius: 8px;
+    padding: 9px 12px; font-family: Arial, sans-serif;
+    font-size: 12px; color: var(--ink); outline: none; resize: none;
+    line-height: 1.5;
+  }
+  .detail-ta::placeholder { color: var(--ghost); }
+  .detail-send {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--ink); border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: background 0.15s;
+  }
+  .detail-send:hover { background: var(--yellow); }
+  .detail-send:hover svg { stroke: var(--ink); }
+  .detail-send svg { width: 16px; height: 16px; stroke: white; }
 </style>
 </head>
 <body>
@@ -579,6 +679,23 @@
     <div class="lb-caption" id="lbCaption"></div>
   </div>
 
+  <!-- DETAIL / THREAD VIEW -->
+  <div class="detail-view" id="detailView">
+    <div class="detail-hdr">
+      <button class="detail-back" onclick="closeDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="detail-title">Task thread</div>
+    </div>
+    <div class="detail-scroll" id="detailScroll"></div>
+    <div class="detail-input">
+      <textarea class="detail-ta" id="commentTa" placeholder="Add a comment…" rows="1"></textarea>
+      <button class="detail-send" onclick="postComment()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 </div>
 
@@ -657,8 +774,8 @@
     var editBtn = !t.done ? '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' : '';
 
     return '<div class="item' + urgCls + doneCls + '" data-id="' + t.id + '">' +
-      '<div class="cb' + tickCls + '" onclick="toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
-      '<div class="item-body">' +
+      '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
+      '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
         '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
         '<span class="item-time">' + (t.done ? 'Done ' + ts : ts) + '</span>' +
@@ -666,7 +783,7 @@
           (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
         '</div>' +
-        '<button class="kebab" onclick="toggleKebab(this)">⋯</button>' +
+        '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' + editBtn +
           '<button class="km-item del" onclick="deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
@@ -962,6 +1079,93 @@
     t.textContent = msg; t.className = 'toast show';
     setTimeout(function() { t.className = 'toast'; }, 1800);
   }
+
+  /* ── Detail / Thread view ── */
+  var activeTaskId = null;
+
+  function openDetail(id) {
+    activeTaskId = id;
+    var t = tasks.find(function(t) { return t.id === id; });
+    if (!t) return;
+
+    var scroll = document.getElementById('detailScroll');
+    var thumbHtml = '';
+    if (t.image_url) {
+      thumbHtml = '<img class="detail-task-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
+    }
+
+    scroll.innerHTML =
+      '<div class="detail-task' + (t.urgent ? ' urg' : '') + '">' +
+        thumbHtml +
+        '<div class="detail-task-body">' + esc(t.body) + '</div>' +
+        '<div class="detail-task-meta">' +
+          (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
+          (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
+          '<span class="detail-task-time">' + timeAgo(t.created_at) + (t.created_by ? ' · ' + esc(t.created_by) : '') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="comments-lbl">Comments</div>' +
+      '<div id="commentsList"><div class="no-comments">Loading…</div></div>';
+
+    document.getElementById('detailView').classList.add('open');
+    document.getElementById('commentTa').value = '';
+    loadComments(id);
+  }
+
+  function closeDetail() {
+    document.getElementById('detailView').classList.remove('open');
+    activeTaskId = null;
+  }
+
+  function loadComments(taskId) {
+    api('/api/comments?task_id=' + taskId).then(function(comments) {
+      var el = document.getElementById('commentsList');
+      if (!comments.length) {
+        el.innerHTML = '<div class="no-comments">No comments yet</div>';
+        return;
+      }
+      var html = '';
+      comments.forEach(function(c) {
+        html += '<div class="comment">' +
+          '<div class="comment-by">' + esc(c.created_by || 'Unknown') + '</div>' +
+          '<div class="comment-body">' + esc(c.body) + '</div>' +
+          '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
+        '</div>';
+      });
+      el.innerHTML = html;
+      // Scroll to bottom
+      var scroll = document.getElementById('detailScroll');
+      scroll.scrollTop = scroll.scrollHeight;
+    }).catch(function() {
+      document.getElementById('commentsList').innerHTML = '<div class="no-comments">Could not load comments</div>';
+    });
+  }
+
+  function postComment() {
+    if (!activeTaskId) return;
+    var ta = document.getElementById('commentTa');
+    var body = ta.value.trim();
+    if (!body) return;
+
+    ta.value = '';
+    api('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify({
+        task_id: activeTaskId,
+        body: body,
+        created_by: curAssignee
+      })
+    }).then(function() {
+      loadComments(activeTaskId);
+    }).catch(function() {
+      showToast('Error posting comment');
+    });
+  }
+
+  // Enter key to send comment
+  document.getElementById('commentTa').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
+  });
 
   /* ── Init + polling ── */
   loadTasks();
