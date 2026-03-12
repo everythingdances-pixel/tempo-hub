@@ -1194,16 +1194,39 @@
     var textDiv = item.querySelector('.item-text');
     if (textDiv.querySelector('textarea')) return;
     var current = textDiv.textContent.trim();
-    var ta = document.createElement('textarea');
-    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:11px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
-    ta.value = current; ta.rows = 2;
-    textDiv.textContent = ''; textDiv.appendChild(ta);
-    ta.focus(); ta.select();
 
+    // Hide other elements while editing
+    var timeEl = item.querySelector('.item-time');
+    var copyEl = item.querySelector('.copy-btn');
+    var kebabEl = item.querySelector('.kebab');
+    if (timeEl) timeEl.style.display = 'none';
+    if (copyEl) copyEl.style.display = 'none';
+    if (kebabEl) kebabEl.style.display = 'none';
+
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:11px;font-weight:400;line-height:1.55;color:var(--ink);background:var(--bg);border:none;border-bottom:1.5px solid var(--ink);padding:2px 0;width:100%;outline:none;resize:none;user-select:text;-webkit-user-select:text;';
+    ta.value = current;
+
+    // Auto-size rows to fit content
+    var lines = Math.max(2, Math.ceil(current.length / 40));
+    ta.rows = Math.min(lines, 6);
+
+    textDiv.textContent = ''; textDiv.appendChild(ta);
+
+    // Place cursor at end (not select all)
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+
+    var saved = false;
     function save() {
+      if (saved) return;
+      saved = true;
       var newText = ta.value.trim() || current;
       textDiv.textContent = newText;
       editingId = null;
+      if (timeEl) timeEl.style.display = '';
+      if (copyEl) copyEl.style.display = '';
+      if (kebabEl) kebabEl.style.display = '';
       if (newText !== current) {
         var t = tasks.find(function(t) { return t.id === id; });
         if (t) t.body = newText;
