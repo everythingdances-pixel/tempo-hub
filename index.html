@@ -986,22 +986,37 @@
   }
 
   /* ── Load tasks from Supabase ── */
+  var commentedIds = {};
+  var commentsLoaded = false;
+
+  function loadCommentFlags() {
+    return api('/api/comments?all=true').then(function(comments) {
+      commentedIds = {};
+      comments.forEach(function(c) { commentedIds[c.task_id] = true; });
+      commentsLoaded = true;
+    }).catch(function() {});
+  }
+
   function loadTasks() {
-    return api('/api/tasks').then(function(data) {
+    var p = api('/api/tasks').then(function(data) {
       tasks = data;
-      // Fetch all comments to flag tasks that have been commented on
-      return api('/api/comments?all=true').then(function(comments) {
-        var commentedIds = {};
-        comments.forEach(function(c) { commentedIds[c.task_id] = true; });
+      tasks.forEach(function(t) { t.has_comments = !!commentedIds[t.id]; });
+    });
+    // Load comment flags once, then refresh every 5th poll
+    if (!commentsLoaded) {
+      p = Promise.all([p, loadCommentFlags()]).then(function() {
         tasks.forEach(function(t) { t.has_comments = !!commentedIds[t.id]; });
-      }).catch(function() { /* ignore — just won't show blue borders */ });
-    }).then(function() {
+      });
+    }
+    return p.then(function() {
       renderFeed();
     }).catch(function(err) {
       console.error('Load error:', err);
       document.getElementById('feedStat').textContent = 'Could not load tasks';
     });
   }
+
+  var pollCount = 0;
 
   /* ── Render feed from tasks array ── */
   function renderFeed() {
@@ -1221,22 +1236,28 @@
 
   /* ── CRUD operations ── */
   function toggleDone(id, done) {
-    var item = document.querySelector('[data-id="' + id + '"]');
-    if (item) {
-      item.querySelector('.cb').classList.toggle('ticked', done);
-      item.querySelector('.item-text').classList.toggle('struck', done);
-      item.classList.toggle('done', done);
-    }
+    // Optimistic: update local data and re-render immediately
+    var t = tasks.find(function(t) { return t.id === id; });
+    if (t) { t.done = done; renderFeed(); }
     api('/api/tasks?id=' + id, {
       method: 'PATCH', body: JSON.stringify({ done: done })
-    }).then(loadTasks).catch(function() { showToast('Error updating task'); loadTasks(); });
+    }).catch(function() {
+      showToast('Error updating task');
+      if (t) { t.done = !done; renderFeed(); }
+    });
   }
 
   function toggleUrgent(id, urgent) {
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    // Optimistic
+    var t = tasks.find(function(t) { return t.id === id; });
+    if (t) { t.urgent = urgent; renderFeed(); }
     api('/api/tasks?id=' + id, {
       method: 'PATCH', body: JSON.stringify({ urgent: urgent })
-    }).then(loadTasks).catch(function() { showToast('Error updating'); loadTasks(); });
+    }).catch(function() {
+      showToast('Error updating');
+      if (t) { t.urgent = !urgent; renderFeed(); }
+    });
   }
 
   function deleteTask(id) {
@@ -1878,7 +1899,12 @@
 
   /* ── Init + polling ── */
   goView('feed');
-  setInterval(loadTasks, 15000);
+  setInterval(function() {
+    pollCount++;
+    // Refresh comment flags every 5th poll (~2.5 min)
+    if (pollCount % 5 === 0) loadCommentFlags();
+    loadTasks();
+  }, 30000);
 </script>
 </body>
 </html>
