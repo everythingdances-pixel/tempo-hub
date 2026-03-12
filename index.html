@@ -1022,11 +1022,13 @@
   function renderFeed() {
     var list = document.getElementById('theList');
     var sortFn = function(a, b) {
+      // Both have manual sort_order from drag-reorder: respect it
       if (a.sort_order != null && b.sort_order != null) return a.sort_order - b.sort_order;
-      if (a.sort_order != null) return -1;
-      if (b.sort_order != null) return 1;
-      // Newest first by created_at
-      return new Date(b.created_at) - new Date(a.created_at);
+      // Items without sort_order (new items) go to the top, newest first
+      if (a.sort_order == null && b.sort_order == null) return new Date(b.created_at) - new Date(a.created_at);
+      // New items (no sort_order) above manually-sorted ones
+      if (a.sort_order == null) return -1;
+      return 1;
     };
     var urgent = tasks.filter(function(t) { return !t.done && t.urgent; }).sort(sortFn);
     var active = tasks.filter(function(t) { return !t.done && !t.urgent; }).sort(sortFn);
