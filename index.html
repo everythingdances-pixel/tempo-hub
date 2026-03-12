@@ -1025,7 +1025,8 @@
       if (a.sort_order != null && b.sort_order != null) return a.sort_order - b.sort_order;
       if (a.sort_order != null) return -1;
       if (b.sort_order != null) return 1;
-      return 0; // keep original API order (newest first)
+      // Newest first by created_at
+      return new Date(b.created_at) - new Date(a.created_at);
     };
     var urgent = tasks.filter(function(t) { return !t.done && t.urgent; }).sort(sortFn);
     var active = tasks.filter(function(t) { return !t.done && !t.urgent; }).sort(sortFn);
