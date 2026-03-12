@@ -970,6 +970,7 @@
         '</div>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
+          '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' +
           '<button class="' + urgItemCls + '" onclick="toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
           '<button class="km-item del" onclick="deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
@@ -1155,6 +1156,9 @@
 
   /* ── UI: tabs, modes ── */
   function goView(name) {
+    // Always close detail view when switching tabs
+    document.getElementById('detailView').classList.remove('open');
+    activeTaskId = null;
     ['capture','feed'].forEach(function(v) {
       var cap = v.charAt(0).toUpperCase() + v.slice(1);
       document.getElementById('v'+cap).className = v === name ? 'view on' : 'view';
