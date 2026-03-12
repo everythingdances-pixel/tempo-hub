@@ -458,7 +458,15 @@
   .km-item.urg-action { color: var(--red); font-weight: 700; }
 
   /* Drag-to-reorder */
-  .item.dragging { opacity: 0.4; transform: scale(0.97); pointer-events: none; }
+  .item.hold-hint { transform: scale(0.98); background: #fffbe6; }
+  .item.dragging {
+    position: fixed; z-index: 100; width: calc(100% - 40px);
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    transform: scale(1.03); opacity: 0.92;
+    transition: none;
+  }
+  .item.drag-placeholder { opacity: 0.15; }
   .item.drag-over-top { box-shadow: 0 -3px 0 0 var(--ink); }
   .item.drag-over-bot { box-shadow: 0 3px 0 0 var(--ink); }
 
@@ -1338,98 +1346,135 @@
     }
   });
 
-  /* ── Drag-to-reorder (touch) ── */
+  /* ── Drag-to-reorder (touch + mouse) ── */
   var dragState = null;
 
   function initDrag() {
     var list = document.getElementById('theList');
-    list.addEventListener('touchstart', dragTouchStart, { passive: false });
-    list.addEventListener('touchmove', dragTouchMove, { passive: false });
-    list.addEventListener('touchend', dragTouchEnd);
-    // Mouse fallback for desktop
+    list.addEventListener('touchstart', dragStart, { passive: false });
+    document.addEventListener('touchmove', dragMove, { passive: false });
+    document.addEventListener('touchend', dragEnd);
+    // Mouse fallback
     list.addEventListener('mousedown', function(e) {
-      var fakeTouch = { clientX: e.clientX, clientY: e.clientY };
-      dragTouchStart({ target: e.target, touches: [fakeTouch], preventDefault: function(){} });
+      dragStart({ target: e.target, touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){} });
     });
     document.addEventListener('mousemove', function(e) {
-      if (!dragState) return;
-      var fakeTouch = { clientX: e.clientX, clientY: e.clientY };
-      dragTouchMove({ touches: [fakeTouch], preventDefault: function(){} });
+      if (dragState) dragMove({ touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){} });
     });
     document.addEventListener('mouseup', function() {
-      if (dragState) dragTouchEnd({});
+      if (dragState) dragEnd();
     });
   }
 
-  function dragTouchStart(e) {
+  function dragStart(e) {
     var item = e.target.closest('.item');
     if (!item) return;
-    // Don't start drag on checkbox, kebab, or links
-    if (e.target.closest('.cb') || e.target.closest('.kebab') || e.target.closest('.km-item') || e.target.closest('.item-thumb')) return;
+    if (e.target.closest('.cb') || e.target.closest('.kebab') || e.target.closest('.km-item') || e.target.closest('.item-thumb') || e.target.closest('.copy-btn')) return;
     var touch = e.touches[0];
+    var rect = item.getBoundingClientRect();
     dragState = {
       el: item,
       id: item.getAttribute('data-id'),
       startY: touch.clientY,
       startX: touch.clientX,
+      offsetY: touch.clientY - rect.top,
+      rect: rect,
+      active: false,
+      lastOver: null,
+      lastAbove: false,
       holdTimer: setTimeout(function() {
         if (!dragState) return;
-        dragState.active = true;
-        item.classList.add('dragging');
-        // haptic feedback if available
-        if (navigator.vibrate) navigator.vibrate(30);
-      }, 400),
-      active: false,
-      lastOver: null
+        // Visual hint — item is about to be grabbed
+        item.classList.add('hold-hint');
+        if (navigator.vibrate) navigator.vibrate(20);
+      }, 120),
+      activateTimer: setTimeout(function() {
+        if (!dragState) return;
+        activateDrag(touch);
+      }, 250)
     };
   }
 
-  function dragTouchMove(e) {
+  function activateDrag(touch) {
+    if (!dragState) return;
+    var item = dragState.el;
+    var rect = dragState.rect;
+    dragState.active = true;
+    item.classList.remove('hold-hint');
+
+    // Create placeholder in the list
+    var ph = document.createElement('div');
+    ph.className = item.className + ' drag-placeholder';
+    ph.style.height = rect.height + 'px';
+    ph.setAttribute('data-placeholder', '1');
+    item.parentNode.insertBefore(ph, item);
+    dragState.placeholder = ph;
+
+    // Lift item to fixed position following finger
+    item.classList.add('dragging');
+    item.style.left = rect.left + 'px';
+    item.style.top = rect.top + 'px';
+    item.style.width = rect.width + 'px';
+
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  function dragMove(e) {
     if (!dragState) return;
     var touch = e.touches[0];
-    // Cancel hold if moved too far before activation
+
+    // Cancel if moved too far before activation
     if (!dragState.active) {
       var dx = Math.abs(touch.clientX - dragState.startX);
       var dy = Math.abs(touch.clientY - dragState.startY);
-      if (dx > 10 || dy > 10) {
+      if (dx > 8 || dy > 8) {
         clearTimeout(dragState.holdTimer);
+        clearTimeout(dragState.activateTimer);
+        if (dragState.el) dragState.el.classList.remove('hold-hint');
         dragState = null;
       }
       return;
     }
+
     e.preventDefault();
-    // Find element under finger
+
+    // Move item with finger
+    dragState.el.style.top = (touch.clientY - dragState.offsetY) + 'px';
+
+    // Find element under finger (dragging item has pointer-events:none)
     var el = document.elementFromPoint(touch.clientX, touch.clientY);
     var overItem = el ? el.closest('.item') : null;
 
-    // Clear previous drag-over styles
+    // Clear previous indicators
     document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(n) {
       n.classList.remove('drag-over-top', 'drag-over-bot');
     });
 
-    if (overItem && overItem !== dragState.el) {
-      var rect = overItem.getBoundingClientRect();
-      var mid = rect.top + rect.height / 2;
-      if (touch.clientY < mid) {
-        overItem.classList.add('drag-over-top');
-      } else {
-        overItem.classList.add('drag-over-bot');
-      }
+    if (overItem && overItem !== dragState.el && !overItem.hasAttribute('data-placeholder')) {
+      var oRect = overItem.getBoundingClientRect();
+      var mid = oRect.top + oRect.height / 2;
+      var above = touch.clientY < mid;
+      overItem.classList.add(above ? 'drag-over-top' : 'drag-over-bot');
       dragState.lastOver = overItem;
-      dragState.lastAbove = touch.clientY < mid;
+      dragState.lastAbove = above;
     }
   }
 
-  function dragTouchEnd(e) {
+  function dragEnd() {
     if (!dragState) return;
     clearTimeout(dragState.holdTimer);
+    clearTimeout(dragState.activateTimer);
     var wasActive = dragState.active;
     var srcId = dragState.id;
     var overItem = dragState.lastOver;
     var above = dragState.lastAbove;
+    var el = dragState.el;
+    var ph = dragState.placeholder;
 
-    // Clean up styles
-    if (dragState.el) dragState.el.classList.remove('dragging');
+    // Clean up
+    el.classList.remove('dragging', 'hold-hint');
+    el.style.position = ''; el.style.left = ''; el.style.top = ''; el.style.width = ''; el.style.zIndex = '';
+    if (ph && ph.parentNode) ph.parentNode.removeChild(ph);
     document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(n) {
       n.classList.remove('drag-over-top', 'drag-over-bot');
     });
@@ -1440,17 +1485,14 @@
     var destId = overItem.getAttribute('data-id');
     if (srcId === destId) return;
 
-    // Reorder in the tasks array
     var srcTask = tasks.find(function(t) { return t.id === srcId; });
     var destTask = tasks.find(function(t) { return t.id === destId; });
     if (!srcTask || !destTask) return;
 
-    // Only reorder within same section (same urgent/done state)
     var srcSection = srcTask.done ? 'done' : (srcTask.urgent ? 'urgent' : 'active');
     var destSection = destTask.done ? 'done' : (destTask.urgent ? 'urgent' : 'active');
     if (srcSection !== destSection) { showToast('Drag within same section'); return; }
 
-    // Get section tasks in current order
     var sectionTasks = tasks.filter(function(t) {
       if (srcSection === 'done') return t.done;
       if (srcSection === 'urgent') return !t.done && t.urgent;
@@ -1461,26 +1503,20 @@
     var destIdx = sectionTasks.indexOf(destTask);
     if (srcIdx === -1 || destIdx === -1) return;
 
-    // Remove src and insert at dest position
     sectionTasks.splice(srcIdx, 1);
     var insertIdx = sectionTasks.indexOf(destTask);
     if (!above) insertIdx++;
     sectionTasks.splice(insertIdx, 0, srcTask);
 
-    // Assign sort_order values and save
-    sectionTasks.forEach(function(t, i) {
-      t.sort_order = i;
-    });
-
+    sectionTasks.forEach(function(t, i) { t.sort_order = i; });
     renderFeed();
-    showToast('Reordered');
 
-    // Persist sort_order for each task in this section
+    // Persist
     sectionTasks.forEach(function(t) {
       api('/api/tasks?id=' + t.id, {
         method: 'PATCH',
         body: JSON.stringify({ sort_order: t.sort_order })
-      }).catch(function() { /* silent — column may not exist yet */ });
+      }).catch(function() {});
     });
   }
 
