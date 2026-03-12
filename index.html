@@ -560,164 +560,10 @@
   <div id="vFeed" class="view">
     <div class="feed-wrap">
       <div class="feed-bar">
-        <div class="feed-stat" id="feedStat">6 open · 2 done</div>
+        <div class="feed-stat" id="feedStat">Loading…</div>
         <button class="clear-btn" onclick="clearDone()">Clear done</button>
       </div>
-      <div class="list" id="theList">
-
-        <div class="sec-lbl">Urgent</div>
-
-        <div class="item urg">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">Call Cameron before Kirwan PCG — confirm he's read the DMA and has no blockers</div>
-            <span class="item-time">8 min ago</span>
-            <div class="item-tags">
-              <span class="tag">Kirwan</span>
-              </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item urg">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">Send Everland first invoice — due by 20/02/26</div>
-            <span class="item-time">Yesterday</span>
-            <div class="item-tags">
-              <span class="tag">Portfolio</span>
-              </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="sec-lbl">Active</div>
-
-        <div class="item">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">Get updated accommodation schedule from Space Collective — arithmetic error outstanding</div>
-            <span class="item-time">2 days ago</span>
-            <div class="item-tags">
-              <span class="tag">Angove</span>
-            </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">Push Tao on Shareholders Agreement — priority before next Everland meeting</div>
-            <span class="item-time">3 days ago</span>
-            <div class="item-tags">
-              <span class="tag">Portfolio</span>
-            </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">Studio53 invoice — confirm scope covers FF&E or just design direction</div>
-            <span class="item-time">4 days ago</span>
-            <div class="item-tags">
-              <span class="tag">Kirwan</span>
-            </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text">DPLH contract renewal — flag to Paul by end of June for decision</div>
-            <span class="item-time">5 days ago</span>
-            <div class="item-tags">
-              <span class="tag">Portfolio</span>
-            </div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item" onclick="editItem(this)">Edit</button>
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item" id="imgCard">
-          <div class="cb" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="thumb-hint">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              Camera capture — tap to view
-            </div>
-            <img class="item-thumb"
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%23e8e8e8'/%3E%3Crect x='40' y='30' width='320' height='16' rx='3' fill='%23bbb'/%3E%3Crect x='40' y='58' width='240' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='82' width='280' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='106' width='200' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='140' width='320' height='50' rx='4' fill='%23d4d4d4'/%3E%3Ctext x='200' y='170' text-anchor='middle' fill='%23999' font-size='12' font-family='Arial'%3EWhiteboard / document%3C/text%3E%3C/svg%3E"
-              alt="Captured image"
-              onclick="openLightbox(this)">
-            <div class="item-text">Review agenda items from whiteboard — three action points flagged for Kirwan PCG</div>
-            <span class="item-time">1 hour ago</span>
-            <div class="item-tags">
-              <span class="tag">Kirwan</span>
-            </div>
-          </div>
-          <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-          <div class="kebab-menu">
-            <button class="km-item" onclick="editItem(this)">Edit</button>
-            <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-          </div>
-        </div>
-
-        <div class="sec-lbl" id="doneLbl">Done</div>
-
-        <div class="item done">
-          <div class="cb ticked" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text struck">Update Engagements Register with Everland terms</div>
-            <span class="item-time">Done 10:14am</span>
-            <div class="item-tags"><span class="tag">Portfolio</span></div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="item done">
-          <div class="cb ticked" onclick="tick(this)"></div>
-          <div class="item-body">
-            <div class="item-text struck">Confirm Daniel Rainone contact details in Project Register</div>
-            <span class="item-time">Done 9:02am</span>
-            <div class="item-tags"><span class="tag">Portfolio</span></div>
-            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
-            <div class="kebab-menu">
-              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <div class="list" id="theList"></div>
     </div>
   </div>
 
@@ -737,17 +583,242 @@
 </div>
 
 <script>
+  /* ── State ── */
+  var tasks = [];
   var curMode = 'type';
   var curAssignee = 'camille';
-  var voiceOn = false, voiceTimer = null;
-  var newItems = [
-    ['Review Filaro pre-sales strategy before ZSA ZSA meeting', 'Filaro', 'Paul'],
-    ['Confirm Space Collective fee timing under ECI approach', 'Filaro', 'Camille'],
-    ['Chase Ben Lisle — Treasury presentation still outstanding', 'Portfolio', 'Paul'],
-    ['Check JDSI FY2026 scorecard targets before meeting 84', 'Portfolio', 'Paul']
-  ];
-  var ni = 0;
+  var recognition = null;
+  var voiceOn = false;
 
+  /* ── API helper ── */
+  function api(path, opts) {
+    opts = opts || {};
+    return fetch(path, {
+      method: opts.method || 'GET',
+      headers: Object.assign({'Content-Type':'application/json'}, opts.headers || {}),
+      body: opts.body || undefined
+    }).then(function(res) {
+      if (!res.ok) throw new Error('API ' + res.status);
+      return res.json();
+    });
+  }
+
+  /* ── Load tasks from Supabase ── */
+  function loadTasks() {
+    return api('/api/tasks').then(function(data) {
+      tasks = data;
+      renderFeed();
+    }).catch(function(err) {
+      console.error('Load error:', err);
+      document.getElementById('feedStat').textContent = 'Could not load tasks';
+    });
+  }
+
+  /* ── Render feed from tasks array ── */
+  function renderFeed() {
+    var list = document.getElementById('theList');
+    var urgent = tasks.filter(function(t) { return !t.done && t.urgent; });
+    var active = tasks.filter(function(t) { return !t.done && !t.urgent; });
+    var done = tasks.filter(function(t) { return t.done; });
+
+    var html = '';
+    if (urgent.length) {
+      html += '<div class="sec-lbl">Urgent</div>';
+      urgent.forEach(function(t) { html += renderItem(t); });
+    }
+    if (active.length) {
+      html += '<div class="sec-lbl">Active</div>';
+      active.forEach(function(t) { html += renderItem(t); });
+    }
+    if (done.length) {
+      html += '<div class="sec-lbl">Done</div>';
+      done.forEach(function(t) { html += renderItem(t); });
+    }
+    if (!tasks.length) {
+      html = '<div style="text-align:center;padding:40px 0;color:#aaa;font-size:12px;">No tasks yet — capture something</div>';
+    }
+    list.innerHTML = html;
+    updateCount();
+  }
+
+  function renderItem(t) {
+    var urgCls = (t.urgent && !t.done) ? ' urg' : '';
+    var doneCls = t.done ? ' done' : '';
+    var tickCls = t.done ? ' ticked' : '';
+    var strCls = t.done ? ' struck' : '';
+    var ts = timeAgo(t.created_at);
+
+    var thumb = '';
+    if (t.image_url) {
+      thumb = '<div class="thumb-hint"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" width="10" height="10" stroke="#aaa"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera capture — tap to view</div>' +
+        '<img class="item-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
+    }
+
+    var editBtn = !t.done ? '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' : '';
+
+    return '<div class="item' + urgCls + doneCls + '" data-id="' + t.id + '">' +
+      '<div class="cb' + tickCls + '" onclick="toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
+      '<div class="item-body">' +
+        thumb +
+        '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
+        '<span class="item-time">' + (t.done ? 'Done ' + ts : ts) + '</span>' +
+        '<div class="item-tags">' +
+          (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
+          (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
+        '</div>' +
+        '<button class="kebab" onclick="toggleKebab(this)">⋯</button>' +
+        '<div class="kebab-menu">' + editBtn +
+          '<button class="km-item del" onclick="deleteTask(\'' + t.id + '\')">Delete</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  }
+
+  function timeAgo(d) {
+    var s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+    if (s < 60) return 'Just now';
+    if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+    if (s < 172800) return 'Yesterday';
+    return Math.floor(s / 86400) + ' days ago';
+  }
+
+  /* ── Capture flow — sends to Claude then Supabase ── */
+  function sendCapture() {
+    var rawInput = '';
+    if (curMode === 'type') rawInput = document.getElementById('taskTa').value.trim();
+    else if (curMode === 'voice') {
+      var vr = document.getElementById('voiceRes');
+      if (vr.style.display !== 'none') rawInput = vr.textContent.replace(/^"|"$/g, '');
+    }
+    else if (curMode === 'camera') rawInput = document.getElementById('camCtx').value.trim() || 'Image captured via camera';
+    else if (curMode === 'gallery') rawInput = document.getElementById('galCtx').value.trim() || 'Screenshot uploaded';
+
+    if (!rawInput) { showToast('Nothing to send'); return; }
+
+    var btn = document.querySelector('.send-btn');
+    btn.textContent = 'SENDING…'; btn.disabled = true;
+
+    /* Step 1: Claude triage */
+    api('/api/claude', {
+      method: 'POST',
+      body: JSON.stringify({ input: rawInput })
+    }).catch(function() {
+      /* Fallback if Claude is unavailable */
+      return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
+    }).then(function(triaged) {
+      /* Step 2: Save to Supabase */
+      return api('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify({
+          body: triaged.body || rawInput,
+          project: triaged.project || 'General',
+          urgent: triaged.urgent || false,
+          type: triaged.type || 'task',
+          actions: triaged.actions || [],
+          raw_input: rawInput,
+          created_by: curAssignee
+        })
+      });
+    }).then(function() {
+      resetCapture();
+      showToast('Sent to feed');
+      return loadTasks();
+    }).then(function() {
+      setTimeout(function() { goView('feed'); }, 400);
+    }).catch(function(err) {
+      console.error('Capture error:', err);
+      showToast('Error — try again');
+    }).finally(function() {
+      btn.textContent = 'SEND TO FEED'; btn.disabled = false;
+    });
+  }
+
+  function resetCapture() {
+    document.getElementById('taskTa').value = '';
+    document.getElementById('voiceRes').style.display = 'none';
+    document.getElementById('voiceLbl').textContent = 'Tap to record';
+    ['cam','gal'].forEach(function(t) {
+      document.getElementById(t+'Img').style.display = 'none';
+      document.getElementById(t+'Ph').style.display = 'flex';
+      document.getElementById(t+'AI').style.display = 'none';
+    });
+    document.getElementById('camCtx').value = '';
+    document.getElementById('galCtx').value = '';
+  }
+
+  /* ── CRUD operations ── */
+  function toggleDone(id, done) {
+    var item = document.querySelector('[data-id="' + id + '"]');
+    if (item) {
+      item.querySelector('.cb').classList.toggle('ticked', done);
+      item.querySelector('.item-text').classList.toggle('struck', done);
+      item.classList.toggle('done', done);
+    }
+    api('/api/tasks?id=' + id, {
+      method: 'PATCH', body: JSON.stringify({ done: done })
+    }).then(loadTasks).catch(function() { showToast('Error updating task'); loadTasks(); });
+  }
+
+  function deleteTask(id) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var item = document.querySelector('[data-id="' + id + '"]');
+    if (item) { item.style.transition = 'opacity 0.2s'; item.style.opacity = '0'; }
+    setTimeout(function() {
+      api('/api/tasks?id=' + id, { method: 'DELETE' }).then(loadTasks).catch(function() {
+        showToast('Error deleting'); loadTasks();
+      });
+    }, 220);
+  }
+
+  function editItem(id) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var item = document.querySelector('[data-id="' + id + '"]');
+    if (!item) return;
+    var textDiv = item.querySelector('.item-text');
+    if (textDiv.querySelector('textarea')) return;
+    var current = textDiv.textContent.trim();
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:13px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
+    ta.value = current; ta.rows = 2;
+    textDiv.textContent = ''; textDiv.appendChild(ta);
+    ta.focus(); ta.select();
+
+    function save() {
+      var newText = ta.value.trim() || current;
+      textDiv.textContent = newText;
+      if (newText !== current) {
+        api('/api/tasks?id=' + id, { method: 'PATCH', body: JSON.stringify({ body: newText }) })
+          .catch(function() { showToast('Error saving edit'); });
+      }
+    }
+    ta.addEventListener('blur', save);
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+      if (e.key === 'Escape') { ta.value = current; ta.blur(); }
+    });
+  }
+
+  function clearDone() {
+    var doneTasks = tasks.filter(function(t) { return t.done; });
+    if (!doneTasks.length) { showToast('No done items'); return; }
+    showToast('Clearing…');
+    var chain = Promise.resolve();
+    doneTasks.forEach(function(t) {
+      chain = chain.then(function() {
+        return api('/api/tasks?id=' + t.id, { method: 'DELETE' });
+      });
+    });
+    chain.then(loadTasks).then(function() { showToast('Done items cleared'); })
+      .catch(function() { showToast('Error clearing'); loadTasks(); });
+  }
+
+  /* ── UI: tabs, modes ── */
   function goView(name) {
     ['capture','feed'].forEach(function(v) {
       var cap = v.charAt(0).toUpperCase() + v.slice(1);
@@ -755,40 +826,10 @@
       document.getElementById('t'+cap).className = v === name ? 'tab on' : 'tab';
     });
     document.getElementById('fab').className = name === 'feed' ? 'fab vis' : 'fab';
-    updateCount();
+    if (name === 'feed') loadTasks();
   }
 
-  function openLightbox(img) {
-    var lb = document.getElementById('lightbox');
-    var lbImg = document.getElementById('lbImg');
-    var caption = document.getElementById('lbCaption');
-    lbImg.src = img.src;
-    var card = img.closest('.item-body');
-    var taskText = card.querySelector('.item-text');
-    caption.textContent = taskText ? taskText.textContent : '';
-    lb.classList.add('open');
-  }
-
-  function closeLightbox(e) {
-    if (!e || e.target === document.getElementById('lightbox') || e.target.classList.contains('lb-close')) {
-      document.getElementById('lightbox').classList.remove('open');
-    }
-  }
   var labels = {type:'Add task', voice:'Record voice', camera:'Camera capture', gallery:'From gallery'};
-
-  function toggleKebab(btn) {
-    var menu = btn.nextElementSibling;
-    var isOpen = menu.classList.contains('open');
-    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    if (!isOpen) menu.classList.add('open');
-  }
-
-  // Close kebab on click outside
-  document.addEventListener('click', function(e) {
-    if (!e.target.classList.contains('kebab') && !e.target.classList.contains('km-item')) {
-      document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    }
-  });
 
   function setMode(m) {
     curMode = m;
@@ -800,21 +841,47 @@
     document.getElementById('inputCardLabel').textContent = labels[m] || 'Add task';
   }
 
+  /* ── Voice — Web Speech API ── */
   function toggleVoice() {
-    voiceOn = !voiceOn;
     var btn = document.getElementById('micBtn');
     var lbl = document.getElementById('voiceLbl');
     var res = document.getElementById('voiceRes');
+
     if (voiceOn) {
-      btn.className = 'mic-btn rec'; lbl.textContent = 'Recording…'; res.style.display = 'none';
-      voiceTimer = setTimeout(function() {
-        voiceOn = false; btn.className = 'mic-btn'; lbl.textContent = 'Tap to record';
-        res.style.display = 'block';
-        res.textContent = '"Follow up with Cameron on Kirwan DMA before end of week"';
-      }, 2500);
-    } else { clearTimeout(voiceTimer); btn.className = 'mic-btn'; lbl.textContent = 'Tap to record'; }
+      voiceOn = false;
+      if (recognition) recognition.stop();
+      btn.className = 'mic-btn'; lbl.textContent = 'Tap to record';
+      return;
+    }
+
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast('Voice not supported'); return; }
+
+    voiceOn = true;
+    btn.className = 'mic-btn rec'; lbl.textContent = 'Recording…'; res.style.display = 'none';
+
+    recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-AU';
+
+    recognition.onresult = function(e) {
+      var transcript = e.results[0][0].transcript;
+      res.textContent = '"' + transcript + '"';
+      res.style.display = 'block';
+    };
+    recognition.onend = function() {
+      voiceOn = false; btn.className = 'mic-btn';
+      lbl.textContent = res.style.display === 'block' ? 'Tap to re-record' : 'Tap to record';
+    };
+    recognition.onerror = function(e) {
+      voiceOn = false; btn.className = 'mic-btn';
+      lbl.textContent = e.error === 'not-allowed' ? 'Mic access denied' : 'Tap to record';
+    };
+    recognition.start();
   }
 
+  /* ── Image preview ── */
   function handleImg(e, type) {
     var file = e.target.files[0]; if (!file) return;
     var reader = new FileReader();
@@ -829,111 +896,38 @@
     reader.readAsDataURL(file);
   }
 
-  function sendCapture() {
-    var ok = false;
-    if (curMode === 'type' && document.getElementById('taskTa').value.trim()) ok = true;
-    if (curMode === 'voice' && document.getElementById('voiceRes').style.display !== 'none') ok = true;
-    if (curMode === 'camera' && document.getElementById('camImg').style.display === 'block') ok = true;
-    if (curMode === 'gallery' && document.getElementById('galImg').style.display === 'block') ok = true;
-    if (!ok) { showToast('Nothing to send'); return; }
-    injectItem();
-    document.getElementById('taskTa').value = '';
-    document.getElementById('voiceRes').style.display = 'none';
-    document.getElementById('voiceLbl').textContent = 'Tap to record';
-    ['cam','gal'].forEach(function(t) {
-      document.getElementById(t+'Img').style.display = 'none';
-      document.getElementById(t+'Ph').style.display = 'flex';
-      document.getElementById(t+'AI').style.display = 'none';
-    });
-    showToast('Sent to feed');
-    setTimeout(function() { goView('feed'); }, 500);
+  /* ── Lightbox ── */
+  function openLightbox(img) {
+    var lb = document.getElementById('lightbox');
+    document.getElementById('lbImg').src = img.src;
+    var card = img.closest('.item-body');
+    var txt = card ? card.querySelector('.item-text') : null;
+    document.getElementById('lbCaption').textContent = txt ? txt.textContent : '';
+    lb.classList.add('open');
+  }
+  function closeLightbox(e) {
+    if (!e || e.target === document.getElementById('lightbox') || e.target.classList.contains('lb-close')) {
+      document.getElementById('lightbox').classList.remove('open');
+    }
   }
 
-  function injectItem() {
-    var list = document.getElementById('theList');
-    var d = newItems[ni % newItems.length]; ni++;
-    var assigneeName = curAssignee === 'paul' ? 'Paul' : 'Camille';
-    var div = document.createElement('div');
-    div.className = 'item'; div.style.opacity = '0';
-
-    var isImage = (curMode === 'camera' || curMode === 'gallery');
-    var imgSrc = isImage ? (document.getElementById(curMode === 'camera' ? 'camImg' : 'galImg').src) : null;
-    var thumbHtml = isImage && imgSrc ? (
-      '<div class="thumb-hint"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" width="10" height="10" stroke="#aaa"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera capture — tap to view</div>' +
-      '<img class="item-thumb" src="' + imgSrc + '" alt="" onclick="openLightbox(this)">'
-    ) : '';
-
-    div.innerHTML =
-      '<div class="cb" onclick="tick(this)"></div>' +
-      '<div class="item-body">' +
-        thumbHtml +
-        '<div class="item-text">' + d[0] + '</div>' +
-        '<span class="item-time">Just now</span>' +
-        '<div class="item-tags">' +
-          '<span class="tag">' + d[1] + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<button class="kebab" onclick="toggleKebab(this)">⋯</button>' +
-      '<div class="kebab-menu">' +
-        '<button class="km-item" onclick="editItem(this)">Edit</button>' +
-        '<button class="km-item del" onclick="deleteItem(this)">Delete</button>' +
-      '</div>';
-
-    var doneLbl = document.getElementById('doneLbl');
-    list.insertBefore(div, doneLbl);
-    requestAnimationFrame(function() { div.style.transition = 'opacity 0.3s'; div.style.opacity = '1'; });
-    updateCount();
-  }
-
-  function tick(cb) {
-    cb.classList.toggle('ticked');
-    var item = cb.closest('.item');
-    var txt = item.querySelector('.item-text');
-    var done = cb.classList.contains('ticked');
-    txt.classList.toggle('struck', done);
-    item.classList.toggle('done', done);
-    if (done) { setTimeout(function() { document.getElementById('theList').appendChild(item); updateCount(); }, 350); }
-    else { updateCount(); }
-  }
-
-  function editItem(btn) {
+  /* ── Kebab menu ── */
+  function toggleKebab(btn) {
+    var menu = btn.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    var item = btn.closest('.item');
-    var textDiv = item.querySelector('.item-text');
-    if (textDiv.querySelector('textarea')) return;
-    var current = textDiv.textContent.trim();
-    var ta = document.createElement('textarea');
-    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:13px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
-    ta.value = current; ta.rows = 2;
-    textDiv.textContent = ''; textDiv.appendChild(ta);
-    ta.focus(); ta.select();
-    ta.addEventListener('blur', function() { textDiv.textContent = ta.value.trim() || current; });
-    ta.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
-      if (e.key === 'Escape') { ta.value = current; ta.blur(); }
-    });
+    if (!isOpen) menu.classList.add('open');
   }
+  document.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('kebab') && !e.target.classList.contains('km-item')) {
+      document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    }
+  });
 
-  function deleteItem(btn) {
-    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    var item = btn.closest('.item');
-    item.style.transition = 'opacity 0.2s'; item.style.opacity = '0';
-    setTimeout(function() { item.remove(); updateCount(); }, 220);
-  }
-
-  function clearDone() {
-    document.querySelectorAll('.item.done').forEach(function(item) {
-      item.style.transition = 'opacity 0.22s'; item.style.opacity = '0';
-      setTimeout(function() { item.remove(); }, 250);
-    });
-    setTimeout(updateCount, 300);
-    showToast('Done items cleared');
-  }
-
+  /* ── Count + toast ── */
   function updateCount() {
-    var all = document.querySelectorAll('#theList .item').length;
-    var done = document.querySelectorAll('#theList .item.done').length;
-    var open = all - done;
+    var open = tasks.filter(function(t) { return !t.done; }).length;
+    var done = tasks.filter(function(t) { return t.done; }).length;
     document.getElementById('feedStat').textContent = open + ' open · ' + done + ' done';
     document.getElementById('fDot').style.display = open > 0 ? 'inline-block' : 'none';
   }
@@ -944,7 +938,9 @@
     setTimeout(function() { t.className = 'toast'; }, 1800);
   }
 
-  updateCount();
+  /* ── Init + polling ── */
+  loadTasks();
+  setInterval(loadTasks, 15000);
 </script>
 </body>
 </html>
