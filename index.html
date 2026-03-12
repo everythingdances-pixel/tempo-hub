@@ -1034,7 +1034,6 @@
         '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
         '<span class="item-time">' + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<div class="item-tags">' +
-          (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
         '</div>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
@@ -1106,10 +1105,8 @@
       /* Step 2: Save to Supabase */
       var task = {
         body: rawInput,
-        project: 'General',
         urgent: false,
         type: 'task',
-        actions: [],
         raw_input: rawInput,
         created_by: curAssignee
       };
@@ -1758,7 +1755,6 @@
         thumbHtml +
         '<div class="detail-task-body">' + esc(t.body) + '</div>' +
         '<div class="detail-task-meta">' +
-          (t.project ? '<span class="tag">' + esc(t.project) + '</span>' : '') +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
           '<span class="detail-task-time">' + timeAgo(t.created_at) + (t.created_by ? ' · ' + esc(t.created_by) : '') + '</span>' +
         '</div>' +
