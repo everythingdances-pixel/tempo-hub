@@ -66,8 +66,14 @@ No preamble. No explanation. JSON only.`;
       return res.status(500).json({ error: 'No response from Claude' });
     }
 
+    // Strip markdown code fences if Claude wraps the JSON
+    let clean = text.trim();
+    if (clean.startsWith('```')) {
+      clean = clean.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    }
+
     // Parse the JSON Claude returned
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(clean);
     return res.status(200).json(parsed);
   } catch (err) {
     return res.status(500).json({ error: 'Server error', detail: err.message });
