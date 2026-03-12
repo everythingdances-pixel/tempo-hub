@@ -1274,15 +1274,18 @@
     }, 220);
   }
 
+  var editingId = null;
+
   function editItem(id) {
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    editingId = id;
     var item = document.querySelector('[data-id="' + id + '"]');
     if (!item) return;
     var textDiv = item.querySelector('.item-text');
     if (textDiv.querySelector('textarea')) return;
     var current = textDiv.textContent.trim();
     var ta = document.createElement('textarea');
-    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:13px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
+    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:11px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
     ta.value = current; ta.rows = 2;
     textDiv.textContent = ''; textDiv.appendChild(ta);
     ta.focus(); ta.select();
@@ -1290,7 +1293,10 @@
     function save() {
       var newText = ta.value.trim() || current;
       textDiv.textContent = newText;
+      editingId = null;
       if (newText !== current) {
+        var t = tasks.find(function(t) { return t.id === id; });
+        if (t) t.body = newText;
         api('/api/tasks?id=' + id, { method: 'PATCH', body: JSON.stringify({ body: newText }) })
           .catch(function() { showToast('Error saving edit'); });
       }
@@ -1807,6 +1813,7 @@
   var activeTaskId = null;
 
   function openDetail(id) {
+    if (editingId) return;
     activeTaskId = id;
     var t = tasks.find(function(t) { return t.id === id; });
     if (!t) return;
