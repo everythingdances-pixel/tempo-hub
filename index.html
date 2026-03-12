@@ -288,33 +288,6 @@
 
   input[type=file] { display: none; }
 
-  /* Claude toggle */
-  .claude-toggle {
-    display: flex; align-items: center; gap: 10px;
-    padding: 2px 0 4px;
-  }
-  .claude-toggle-lbl {
-    font-size: 10px; color: var(--sub);
-    letter-spacing: 0.03em;
-  }
-  .claude-toggle-lbl.on { color: var(--ink); font-weight: 700; }
-  .toggle-track {
-    width: 36px; height: 20px;
-    background: var(--surface-dk); border-radius: 10px;
-    position: relative; cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
-  .toggle-track.on { background: var(--ink); }
-  .toggle-knob {
-    width: 16px; height: 16px;
-    background: white; border-radius: 50%;
-    position: absolute; top: 2px; left: 2px;
-    transition: left 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .toggle-track.on .toggle-knob { left: 18px; }
-
   /* Copy button on feed card */
   .copy-btn {
     position: absolute; top: 14px; right: 24px;
@@ -855,13 +828,6 @@
 
       </div><!-- /input-card -->
 
-      <div class="claude-toggle">
-        <div class="toggle-track on" id="claudeToggle" onclick="toggleClaude()">
-          <div class="toggle-knob"></div>
-        </div>
-        <span class="claude-toggle-lbl on" id="claudeToggleLbl">Process with Claude</span>
-      </div>
-
       <button class="send-btn" onclick="sendCapture()">Send to feed</button>
 
     </div>
@@ -934,14 +900,6 @@
   var curAssignee = localStorage.getItem('tempoUser') || '';
   var recognition = null;
   var voiceOn = false;
-  var claudeOn = true;
-
-  function toggleClaude() {
-    claudeOn = !claudeOn;
-    document.getElementById('claudeToggle').className = claudeOn ? 'toggle-track on' : 'toggle-track';
-    document.getElementById('claudeToggleLbl').className = claudeOn ? 'claude-toggle-lbl on' : 'claude-toggle-lbl';
-    document.getElementById('claudeToggleLbl').textContent = claudeOn ? 'Process with Claude' : 'Send raw — no Claude';
-  }
 
   /* ── User identity ── */
   function pickUser(name) {
@@ -1142,43 +1100,16 @@
 
     var imageUrl = null;
 
-    // Extract image base64 if present (for Claude vision)
-    var imgBase64 = null;
-    var imgContentType = null;
-    if (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('data:')) {
-      var imgMatch = imgEl.src.match(/^data:(image\/\w+);base64,(.+)$/);
-      if (imgMatch) {
-        imgContentType = imgMatch[1];
-        imgBase64 = imgMatch[2];
-      }
-    }
-
     /* Step 1: Upload image if present */
     uploadImage(imgEl).then(function(url) {
       imageUrl = url;
-      /* Step 2: Claude triage (if toggle on) */
-      if (claudeOn) {
-        var claudePayload = { input: rawInput };
-        if (imgBase64 && imgContentType) {
-          claudePayload.image_base64 = imgBase64;
-          claudePayload.image_content_type = imgContentType;
-        }
-        return api('/api/claude', {
-          method: 'POST',
-          body: JSON.stringify(claudePayload)
-        }).catch(function() {
-          return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
-        });
-      }
-      return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
-    }).then(function(triaged) {
-      /* Step 3: Save to Supabase */
+      /* Step 2: Save to Supabase */
       var task = {
-        body: triaged.body || rawInput,
-        project: triaged.project || 'General',
-        urgent: triaged.urgent || false,
-        type: triaged.type || 'task',
-        actions: triaged.actions || [],
+        body: rawInput,
+        project: 'General',
+        urgent: false,
+        type: 'task',
+        actions: [],
         raw_input: rawInput,
         created_by: curAssignee
       };
