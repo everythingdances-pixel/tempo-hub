@@ -1791,8 +1791,24 @@
     var ta = document.getElementById('commentTa');
     var body = ta.value.trim();
     if (!body) return;
-
     ta.value = '';
+
+    // Optimistic: show comment immediately
+    var el = document.getElementById('commentsList');
+    var noComments = el.querySelector('.no-comments');
+    if (noComments) el.innerHTML = '<div class="comments-list"></div>';
+    var list = el.querySelector('.comments-list') || el;
+    var cInit = curAssignee ? curAssignee.charAt(0).toUpperCase() : '?';
+    list.insertAdjacentHTML('beforeend',
+      '<div class="comment">' +
+        '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
+        '<div class="comment-body">' + esc(body) + '</div>' +
+        '<div class="comment-time">Just now</div>' +
+      '</div>');
+    var scroll = document.getElementById('detailScroll');
+    scroll.scrollTop = scroll.scrollHeight;
+
+    // Persist in background
     api('/api/comments', {
       method: 'POST',
       body: JSON.stringify({
@@ -1800,10 +1816,9 @@
         body: body,
         created_by: curAssignee
       })
-    }).then(function() {
-      loadComments(activeTaskId);
     }).catch(function() {
       showToast('Error posting comment');
+      loadComments(activeTaskId);
     });
   }
 
