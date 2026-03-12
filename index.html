@@ -1020,7 +1020,7 @@
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
         '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
-        '<span class="item-time">' + (t.created_by ? esc(t.created_by.charAt(0).toUpperCase() + t.created_by.slice(1)) + ' · ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
+        '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
