@@ -851,8 +851,6 @@
           </div>
         </div>
         <input type="file" id="galFile" accept="image/*" onchange="handleImg(event,'gal')">
-        <input class="ctx-in" type="text" id="galCtx" placeholder="Add context — Claude will read the screenshot">
-        <div class="ai-bar" id="galAI"><div class="ai-dot"></div><div class="ai-txt">Claude is reading the screenshot…</div></div>
       </div>
 
       </div><!-- /input-card -->
@@ -1133,7 +1131,7 @@
       imgEl = document.getElementById('camImg');
     }
     else if (curMode === 'gallery') {
-      rawInput = document.getElementById('galCtx').value.trim() || 'Please read and extract the content from this screenshot';
+      rawInput = 'Screenshot capture';
       imgEl = document.getElementById('galImg');
     }
 
@@ -1214,10 +1212,10 @@
     ['cam','gal'].forEach(function(t) {
       document.getElementById(t+'Img').style.display = 'none';
       document.getElementById(t+'Ph').style.display = 'flex';
-      document.getElementById(t+'AI').style.display = 'none';
+      var aiBar = document.getElementById(t+'AI');
+      if (aiBar) aiBar.style.display = 'none';
     });
     document.getElementById('camCtx').value = '';
-    document.getElementById('galCtx').value = '';
   }
 
   /* ── Copy task text ── */
