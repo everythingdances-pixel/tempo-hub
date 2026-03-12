@@ -220,9 +220,21 @@
     display: none;
     border-top: 1px solid var(--border);
     padding: 10px 0 2px;
-    font-size: 12px; color: var(--sub);
-    line-height: 1.55; font-style: italic;
+    flex-direction: column; gap: 6px;
   }
+  .voice-res-lbl {
+    font-size: 9px; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .voice-ta {
+    width: 100%; min-height: 80px;
+    background: transparent; border: none;
+    padding: 4px 0;
+    font-family: Arial, sans-serif;
+    font-size: 12px; color: var(--ink);
+    line-height: 1.6; resize: none; outline: none;
+  }
+  .voice-ta::placeholder { color: var(--ghost); }
 
   /* Image box */
   .img-box {
@@ -404,6 +416,12 @@
   }
   .km-item:hover { background: var(--surface); }
   .km-item.del { color: var(--red); }
+  .km-item.urg-action { color: var(--red); font-weight: 700; }
+
+  /* Drag-to-reorder */
+  .item.dragging { opacity: 0.4; transform: scale(0.97); }
+  .item.drag-over-top { box-shadow: 0 -3px 0 0 var(--ink); }
+  .item.drag-over-bot { box-shadow: 0 3px 0 0 var(--ink); }
 
   /* Image thumbnail in feed card */
   .item-thumb {
@@ -551,11 +569,12 @@
     margin-bottom: 2px;
     display: flex; align-items: center; gap: 5px;
   }
-  .item-author .avatar-xs {
+  .avatar-xs {
     width: 15px; height: 15px; border-radius: 50%;
     background: var(--ink); color: white;
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 7px; font-weight: 700;
+    flex-shrink: 0;
   }
 
   /* ── DETAIL / THREAD VIEW ── */
@@ -615,6 +634,9 @@
     padding-top: 4px;
   }
 
+  .comments-list {
+    display: flex; flex-direction: column; gap: 8px;
+  }
   .comment {
     padding: 10px 14px;
     background: var(--surface); border-radius: 10px;
@@ -737,7 +759,10 @@
           </div>
           <div class="voice-lbl" id="voiceLbl">Tap to record</div>
         </div>
-        <div class="voice-res" id="voiceRes"></div>
+        <div class="voice-res" id="voiceRes">
+          <div class="voice-res-lbl">Edit transcription</div>
+          <textarea class="voice-ta" id="voiceTa" placeholder="Your transcription will appear here…"></textarea>
+        </div>
       </div>
 
       <!-- Camera -->
@@ -886,9 +911,15 @@
   /* ── Render feed from tasks array ── */
   function renderFeed() {
     var list = document.getElementById('theList');
-    var urgent = tasks.filter(function(t) { return !t.done && t.urgent; });
-    var active = tasks.filter(function(t) { return !t.done && !t.urgent; });
-    var done = tasks.filter(function(t) { return t.done; });
+    var sortFn = function(a, b) {
+      if (a.sort_order != null && b.sort_order != null) return a.sort_order - b.sort_order;
+      if (a.sort_order != null) return -1;
+      if (b.sort_order != null) return 1;
+      return 0; // keep original API order (newest first)
+    };
+    var urgent = tasks.filter(function(t) { return !t.done && t.urgent; }).sort(sortFn);
+    var active = tasks.filter(function(t) { return !t.done && !t.urgent; }).sort(sortFn);
+    var done = tasks.filter(function(t) { return t.done; }).sort(sortFn);
 
     var html = '';
     if (urgent.length) {
@@ -923,9 +954,9 @@
         '<img class="item-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
     }
 
-    var editBtn = !t.done ? '<button class="km-item" onclick="editItem(\'' + t.id + '\')">Edit</button>' : '';
-
     var commentCls = t.has_comments ? ' commented' : '';
+    var urgLabel = t.urgent ? 'Remove urgent' : 'Make urgent';
+    var urgItemCls = t.urgent ? 'km-item' : 'km-item urg-action';
 
     return '<div class="item' + urgCls + doneCls + commentCls + '" data-id="' + t.id + '">' +
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
@@ -938,7 +969,8 @@
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
         '</div>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
-        '<div class="kebab-menu">' + editBtn +
+        '<div class="kebab-menu">' +
+          '<button class="' + urgItemCls + '" onclick="toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
           '<button class="km-item del" onclick="deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
       '</div>' +
@@ -979,8 +1011,7 @@
     var imgEl = null;
     if (curMode === 'type') rawInput = document.getElementById('taskTa').value.trim();
     else if (curMode === 'voice') {
-      var vr = document.getElementById('voiceRes');
-      if (vr.style.display !== 'none') rawInput = vr.textContent.replace(/^"|"$/g, '');
+      rawInput = document.getElementById('voiceTa').value.trim();
     }
     else if (curMode === 'camera') {
       rawInput = document.getElementById('camCtx').value.trim() || 'Image captured via camera';
@@ -1038,6 +1069,7 @@
   function resetCapture() {
     document.getElementById('taskTa').value = '';
     document.getElementById('voiceRes').style.display = 'none';
+    document.getElementById('voiceTa').value = '';
     document.getElementById('voiceLbl').textContent = 'Tap to record';
     ['cam','gal'].forEach(function(t) {
       document.getElementById(t+'Img').style.display = 'none';
@@ -1059,6 +1091,13 @@
     api('/api/tasks?id=' + id, {
       method: 'PATCH', body: JSON.stringify({ done: done })
     }).then(loadTasks).catch(function() { showToast('Error updating task'); loadTasks(); });
+  }
+
+  function toggleUrgent(id, urgent) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    api('/api/tasks?id=' + id, {
+      method: 'PATCH', body: JSON.stringify({ urgent: urgent })
+    }).then(loadTasks).catch(function() { showToast('Error updating'); loadTasks(); });
   }
 
   function deleteTask(id) {
@@ -1163,12 +1202,12 @@
 
     recognition.onresult = function(e) {
       var transcript = e.results[0][0].transcript;
-      res.textContent = '"' + transcript + '"';
-      res.style.display = 'block';
+      document.getElementById('voiceTa').value = transcript;
+      res.style.display = 'flex';
     };
     recognition.onend = function() {
       voiceOn = false; btn.className = 'mic-btn';
-      lbl.textContent = res.style.display === 'block' ? 'Tap to re-record' : 'Tap to record';
+      lbl.textContent = res.style.display === 'flex' ? 'Tap to re-record' : 'Tap to record';
     };
     recognition.onerror = function(e) {
       voiceOn = false; btn.className = 'mic-btn';
@@ -1219,6 +1258,154 @@
       document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
     }
   });
+
+  /* ── Drag-to-reorder (touch) ── */
+  var dragState = null;
+
+  function initDrag() {
+    var list = document.getElementById('theList');
+    list.addEventListener('touchstart', dragTouchStart, { passive: false });
+    list.addEventListener('touchmove', dragTouchMove, { passive: false });
+    list.addEventListener('touchend', dragTouchEnd);
+    // Mouse fallback for desktop
+    list.addEventListener('mousedown', function(e) {
+      var fakeTouch = { clientX: e.clientX, clientY: e.clientY };
+      dragTouchStart({ target: e.target, touches: [fakeTouch], preventDefault: function(){} });
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!dragState) return;
+      var fakeTouch = { clientX: e.clientX, clientY: e.clientY };
+      dragTouchMove({ touches: [fakeTouch], preventDefault: function(){} });
+    });
+    document.addEventListener('mouseup', function() {
+      if (dragState) dragTouchEnd({});
+    });
+  }
+
+  function dragTouchStart(e) {
+    var item = e.target.closest('.item');
+    if (!item) return;
+    // Don't start drag on checkbox, kebab, or links
+    if (e.target.closest('.cb') || e.target.closest('.kebab') || e.target.closest('.km-item') || e.target.closest('.item-thumb')) return;
+    var touch = e.touches[0];
+    dragState = {
+      el: item,
+      id: item.getAttribute('data-id'),
+      startY: touch.clientY,
+      startX: touch.clientX,
+      holdTimer: setTimeout(function() {
+        if (!dragState) return;
+        dragState.active = true;
+        item.classList.add('dragging');
+        // haptic feedback if available
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 400),
+      active: false,
+      lastOver: null
+    };
+  }
+
+  function dragTouchMove(e) {
+    if (!dragState) return;
+    var touch = e.touches[0];
+    // Cancel hold if moved too far before activation
+    if (!dragState.active) {
+      var dx = Math.abs(touch.clientX - dragState.startX);
+      var dy = Math.abs(touch.clientY - dragState.startY);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(dragState.holdTimer);
+        dragState = null;
+      }
+      return;
+    }
+    e.preventDefault();
+    // Find element under finger
+    var el = document.elementFromPoint(touch.clientX, touch.clientY);
+    var overItem = el ? el.closest('.item') : null;
+
+    // Clear previous drag-over styles
+    document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(n) {
+      n.classList.remove('drag-over-top', 'drag-over-bot');
+    });
+
+    if (overItem && overItem !== dragState.el) {
+      var rect = overItem.getBoundingClientRect();
+      var mid = rect.top + rect.height / 2;
+      if (touch.clientY < mid) {
+        overItem.classList.add('drag-over-top');
+      } else {
+        overItem.classList.add('drag-over-bot');
+      }
+      dragState.lastOver = overItem;
+      dragState.lastAbove = touch.clientY < mid;
+    }
+  }
+
+  function dragTouchEnd(e) {
+    if (!dragState) return;
+    clearTimeout(dragState.holdTimer);
+    var wasActive = dragState.active;
+    var srcId = dragState.id;
+    var overItem = dragState.lastOver;
+    var above = dragState.lastAbove;
+
+    // Clean up styles
+    if (dragState.el) dragState.el.classList.remove('dragging');
+    document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(n) {
+      n.classList.remove('drag-over-top', 'drag-over-bot');
+    });
+
+    dragState = null;
+    if (!wasActive || !overItem) return;
+
+    var destId = overItem.getAttribute('data-id');
+    if (srcId === destId) return;
+
+    // Reorder in the tasks array
+    var srcTask = tasks.find(function(t) { return t.id === srcId; });
+    var destTask = tasks.find(function(t) { return t.id === destId; });
+    if (!srcTask || !destTask) return;
+
+    // Only reorder within same section (same urgent/done state)
+    var srcSection = srcTask.done ? 'done' : (srcTask.urgent ? 'urgent' : 'active');
+    var destSection = destTask.done ? 'done' : (destTask.urgent ? 'urgent' : 'active');
+    if (srcSection !== destSection) { showToast('Drag within same section'); return; }
+
+    // Get section tasks in current order
+    var sectionTasks = tasks.filter(function(t) {
+      if (srcSection === 'done') return t.done;
+      if (srcSection === 'urgent') return !t.done && t.urgent;
+      return !t.done && !t.urgent;
+    });
+
+    var srcIdx = sectionTasks.indexOf(srcTask);
+    var destIdx = sectionTasks.indexOf(destTask);
+    if (srcIdx === -1 || destIdx === -1) return;
+
+    // Remove src and insert at dest position
+    sectionTasks.splice(srcIdx, 1);
+    var insertIdx = sectionTasks.indexOf(destTask);
+    if (!above) insertIdx++;
+    sectionTasks.splice(insertIdx, 0, srcTask);
+
+    // Assign sort_order values and save
+    sectionTasks.forEach(function(t, i) {
+      t.sort_order = i;
+    });
+
+    renderFeed();
+    showToast('Reordered');
+
+    // Persist sort_order for each task in this section
+    sectionTasks.forEach(function(t) {
+      api('/api/tasks?id=' + t.id, {
+        method: 'PATCH',
+        body: JSON.stringify({ sort_order: t.sort_order })
+      }).catch(function() { /* silent — column may not exist yet */ });
+    });
+  }
+
+  initDrag();
 
   /* ── Count + toast ── */
   function updateCount() {
@@ -1291,7 +1478,7 @@
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
         '</div>';
       });
-      el.innerHTML = html;
+      el.innerHTML = '<div class="comments-list">' + html + '</div>';
       // Scroll to bottom
       var scroll = document.getElementById('detailScroll');
       scroll.scrollTop = scroll.scrollHeight;
