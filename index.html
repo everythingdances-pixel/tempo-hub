@@ -583,12 +583,12 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab on" id="tCapture" onclick="event.stopPropagation(); goView('capture')">Capture</div>
-    <div class="tab" id="tFeed" onclick="event.stopPropagation(); goView('feed')">Feed <span class="feed-dot" id="fDot"></span></div>
+    <div class="tab" id="tCapture" onclick="event.stopPropagation(); goView('capture')">Capture</div>
+    <div class="tab on" id="tFeed" onclick="event.stopPropagation(); goView('feed')">Feed <span class="feed-dot" id="fDot"></span></div>
   </div>
 
   <!-- ══ CAPTURE VIEW ══ -->
-  <div id="vCapture" class="view on">
+  <div id="vCapture" class="view">
     <div class="cap-scroll">
 
       <!-- Mode tiles -->
@@ -667,7 +667,7 @@
   </div>
 
   <!-- ══ FEED VIEW ══ -->
-  <div id="vFeed" class="view">
+  <div id="vFeed" class="view on">
     <div class="feed-wrap">
       <div class="feed-bar">
         <div class="feed-stat" id="feedStat">Loading…</div>
@@ -1177,8 +1177,13 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
   });
 
+  /* ── Enter key sends from capture textarea ── */
+  document.getElementById('taskTa').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCapture(); }
+  });
+
   /* ── Init + polling ── */
-  loadTasks();
+  goView('feed');
   setInterval(loadTasks, 15000);
 </script>
 </body>
