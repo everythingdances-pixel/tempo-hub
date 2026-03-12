@@ -387,8 +387,10 @@
   .item:hover { background: var(--yellow); }
   .item.commented { border-left-color: #2563eb; }
   .item.urg { border-left-color: var(--red); }
-  .item.done { opacity: 0.3; border-left-color: #d0d0d0; }
-  .item.done:hover { background: #f7f7f7; }
+  .item.done { border-left-color: #d0d0d0; background: #fafafa; }
+  .item.done:hover { background: #f4f4f4; }
+  .item.done .item-time { color: #999; }
+  .item.done .tag { color: #999; background: #f0f0f0; }
 
   /* Circle checkbox */
   .cb {
@@ -416,7 +418,7 @@
     color: var(--ink); margin-bottom: 4px;
     padding-right: 44px;
   }
-  .item-text.struck { text-decoration: line-through; color: var(--ghost); }
+  .item-text.struck { text-decoration: line-through; color: #777; }
 
   .item-time {
     display: block;

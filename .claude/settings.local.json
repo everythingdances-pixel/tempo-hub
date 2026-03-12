@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx --yes sharp-cli --version)",
+      "Bash(npm list:*)",
+      "Bash(node -e \":*)",
+      "Bash(where.exe node:*)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" -v)",
+      "Bash(\"/c/Users/every/AppData/Roaming/nvm/v22.12.0/node.exe\" -v)"
+    ]
+  }
+}

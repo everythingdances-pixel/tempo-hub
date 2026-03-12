@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TEMPO</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --surface-dk: #eaeaea;
+    --border: #c4c4c4;
+    --ink: #000000;
+    --sub: #555555;
+    --ghost: #aaaaaa;
+    --yellow: #ffec00;
+    --red: #cc0000;
+    --accent: #000000;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #d8d8d8;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  /* ── STATUS ── */
+  .status {
+    padding: 14px 28px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .status-time { font-size: 15px; font-weight: 700; }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 15px; height: 15px; }
+
+  /* ── HEADER ── */
+  .hdr {
+    padding: 52px 24px 0;
+    flex-shrink: 0;
+  }
+  .wordmark {
+    display: block;
+    height: 22px; width: auto;
+  }
+  .wordmark-sub {
+    font-family: 'Aptos Black', 'Arial Black', Arial, sans-serif;
+    font-size: 14px; font-weight: 900;
+    color: var(--ink); margin-top: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 6px;
+    padding: 28px 24px 0;
+    flex-shrink: 0;
+  }
+  .tab {
+    font-family: Arial, sans-serif;
+    font-size: 12px; font-weight: 400;
+    padding: 6px 18px; border-radius: 5px;
+    border: none; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .tab:hover { background: var(--yellow); color: var(--ink); }
+  .tab.on { background: var(--ink); color: #fff; }
+  .tab.on:hover { background: var(--ink); }
+
+  .feed-dot {
+    display: inline-block; width: 5px; height: 5px;
+    background: var(--red); border-radius: 50%;
+    margin-left: 4px; vertical-align: middle; margin-top: -2px;
+  }
+
+  .hdr-rule {
+    margin: 12px 24px 0;
+    border: none; border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .view.on { display: flex; }
+
+  /* ══ CAPTURE ══ */
+  .cap-scroll {
+    flex: 1; overflow-y: auto;
+    padding: 28px 24px 36px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  /* Input section card */
+  .input-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 14px 16px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .input-card-label {
+    font-size: 9px; font-weight: 400; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  /* Mode tiles */
+  .mode-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 7px; }
+
+  .mode-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 13px 4px;
+    background: var(--surface);
+    border: none; border-radius: 10px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .mode-tile:hover { background: var(--yellow); }
+  .mode-tile.on { background: var(--surface-dk); }
+  .mode-tile.on:hover { background: var(--yellow); }
+  .mode-tile svg { width: 18px; height: 18px; stroke: var(--ghost); transition: stroke 0.15s; }
+  .mode-tile.on svg, .mode-tile:hover svg { stroke: var(--ink); }
+  .mode-tile span {
+    font-size: 9px; font-weight: 400; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    transition: color 0.15s;
+  }
+  .mode-tile.on span, .mode-tile:hover span { color: var(--ink); }
+
+  /* Assignee toggle — inside capture, below mode tiles */
+  .assignee-row {
+    display: flex; gap: 6px;
+  }
+  .a-btn {
+    font-family: Arial, sans-serif;
+    font-size: 11px; font-weight: 400;
+    padding: 5px 18px; border-radius: 5px;
+    border: none; cursor: pointer;
+    background: var(--surface); color: var(--sub);
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .a-btn:hover { background: var(--yellow); color: var(--ink); }
+  .a-btn.on { background: var(--ink); color: #fff; }
+
+  /* Panels */
+  .panel { display: none; flex-direction: column; gap: 10px; }
+  .panel.on { display: flex; }
+
+  .task-ta {
+    width: 100%; min-height: 180px;
+    background: transparent; border: none;
+    border-radius: 0;
+    padding: 4px 0;
+    font-family: Arial, sans-serif;
+    font-size: 12px; font-weight: 400; color: var(--ink);
+    line-height: 1.6; resize: none; outline: none;
+  }
+  .task-ta::placeholder { color: var(--ghost); }
+
+  /* Voice */
+  .voice-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 12px; padding: 14px 0 6px;
+  }
+  .mic-btn {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: var(--surface); border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .mic-btn:hover { background: var(--yellow); }
+  .mic-btn.rec { background: var(--ink); animation: mpulse 1.4s ease-in-out infinite; }
+  .mic-btn.rec svg { stroke: white; }
+  @keyframes mpulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,0,0,0.15); }
+    50% { box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+  }
+  .mic-btn svg { width: 22px; height: 22px; stroke: var(--ghost); }
+  .voice-lbl { font-size: 11px; color: var(--ghost); }
+  .voice-res {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 10px 0 2px;
+    font-size: 12px; color: var(--sub);
+    line-height: 1.55; font-style: italic;
+  }
+
+  /* Image box */
+  .img-box {
+    width: 100%; aspect-ratio: 16/10;
+    background: var(--surface); border-radius: var(--radius);
+    border: none;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; cursor: pointer; overflow: hidden;
+    position: relative; transition: background 0.15s;
+  }
+  .img-box:hover { background: var(--yellow); }
+  .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; display: none; }
+  .img-ph { display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
+  .img-ph svg { width: 20px; height: 20px; stroke: var(--ghost); }
+  .img-ph span { font-size: 11px; color: var(--ghost); }
+  .img-box:hover .img-ph svg { stroke: var(--ink); }
+  .img-box:hover .img-ph span { color: var(--ink); }
+
+  .ctx-in {
+    background: transparent;
+    border: none; border-top: 1px solid var(--border);
+    padding: 10px 0 2px;
+    font-family: Arial, sans-serif;
+    font-size: 12px; color: var(--ink);
+    outline: none; width: 100%;
+  }
+  .ctx-in::placeholder { color: var(--ghost); }
+
+  .ai-bar {
+    display: none; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-left: 3px solid var(--yellow);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .ai-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); flex-shrink: 0; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+  .ai-txt { font-size: 11px; color: var(--sub); font-style: italic; }
+
+  input[type=file] { display: none; }
+
+  .send-btn {
+    width: 100%; padding: 14px;
+    background: var(--ink); color: #fff;
+    border: none; border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px; font-weight: 400;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .send-btn:hover { background: var(--yellow); color: var(--ink); }
+
+  /* ══ FEED ══ */
+  .feed-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .feed-bar {
+    padding: 14px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .feed-stat {
+    font-size: 10px; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .clear-btn {
+    font-size: 10px; font-weight: 400; color: var(--ghost);
+    background: none; border: none; cursor: pointer;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .clear-btn:hover { color: var(--ink); }
+
+  .list {
+    flex: 1; overflow-y: auto;
+    padding: 0 20px 40px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .sec-lbl {
+    font-size: 10px; font-weight: 700; color: var(--ink);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 18px 2px 4px;
+  }
+  .sec-lbl:first-child { padding-top: 4px; }
+
+  /* ── ITEM CARD ── */
+  .item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px 13px;
+    background: #f7f7f7;
+    border: none;
+    border-left: 4px solid var(--ink);
+    border-radius: var(--radius);
+    transition: opacity 0.3s;
+    cursor: default;
+    position: relative;
+  }
+  .item:hover { background: var(--yellow); }
+  .item.urg { border-left-color: var(--red); }
+  .item.done { opacity: 0.3; border-left-color: #d0d0d0; }
+  .item.done:hover { background: #f7f7f7; }
+
+  /* Circle checkbox */
+  .cb {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0; margin-top: 1px;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+  }
+  .cb:hover { border-color: var(--ink); }
+  .cb.ticked { background: var(--ink); border-color: var(--ink); }
+  .cb.ticked::after {
+    content: ''; width: 8px; height: 4px;
+    border-left: 1.5px solid white; border-bottom: 1.5px solid white;
+    transform: rotate(-45deg) translateY(-1px); display: block;
+  }
+
+  .item-body { flex: 1; min-width: 0; }
+
+  .item-text {
+    font-family: Arial, sans-serif;
+    font-size: 11px; font-weight: 400; line-height: 1.55;
+    color: var(--ink); margin-bottom: 4px;
+    padding-right: 24px;
+  }
+  .item-text.struck { text-decoration: line-through; color: var(--ghost); }
+
+  .item-time {
+    display: block;
+    font-size: 10px; font-weight: 400; color: var(--ghost);
+    margin-bottom: 7px;
+  }
+
+  .item-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .tag {
+    font-size: 8px; font-weight: 400;
+    padding: 2px 7px; border-radius: 2px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: #ffffff; color: var(--ghost);
+  }
+  .t-urg { color: var(--red); }
+
+  /* Kebab menu */
+  .kebab {
+    position: absolute; top: 14px; right: 0;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ghost);
+    font-size: 14px; letter-spacing: 0.5px;
+    background: none; border: none;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+  .kebab:hover { color: var(--ink); }
+
+  .kebab-menu {
+    display: none;
+    position: absolute; top: 32px; right: 0;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    overflow: hidden; z-index: 50; min-width: 100px;
+  }
+  .kebab-menu.open { display: block; }
+  .km-item {
+    display: block; width: 100%;
+    padding: 10px 16px;
+    font-family: Arial, sans-serif;
+    font-size: 12px; font-weight: 400; color: var(--ink);
+    background: none; border: none; text-align: left;
+    cursor: pointer; transition: background 0.1s;
+    white-space: nowrap;
+  }
+  .km-item:hover { background: var(--surface); }
+  .km-item.del { color: var(--red); }
+
+  /* Image thumbnail in feed card */
+  .item-thumb {
+    width: 100%; aspect-ratio: 16/9;
+    object-fit: cover; border-radius: 6px;
+    margin-bottom: 8px; cursor: pointer;
+    display: block;
+    transition: opacity 0.15s;
+  }
+  .item-thumb:hover { opacity: 0.85; }
+
+  .thumb-hint {
+    font-size: 9px; color: var(--ghost);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 4px;
+  }
+  .thumb-hint svg { width: 10px; height: 10px; stroke: var(--ghost); }
+
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 100%; max-height: 80%;
+    object-fit: contain; border-radius: 8px;
+  }
+  .lb-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.15);
+    border: none; border-radius: 50%;
+    color: white; font-size: 16px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .lb-close:hover { background: rgba(255,255,255,0.3); }
+  .lb-caption {
+    margin-top: 16px; font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    text-align: center; line-height: 1.5;
+    max-width: 100%;
+  }
+
+  /* FAB */
+  .fab {
+    position: absolute; bottom: 30px; right: 26px;
+    width: 44px; height: 44px;
+    background: var(--ink); border-radius: 8px;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    transition: background 0.15s; z-index: 10;
+  }
+  .fab.vis { display: flex; }
+  .fab:hover { background: var(--yellow); }
+  .fab:hover svg line { stroke: var(--ink); }
+  .fab svg { width: 18px; height: 18px; }
+  .fab svg line { stroke: white; stroke-width: 2.5; }
+
+  /* TOAST */
+  .toast {
+    position: absolute; bottom: 84px; left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: var(--ink); color: white;
+    font-size: 10px; font-weight: 400;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 8px 16px; border-radius: 3px;
+    opacity: 0; transition: all 0.22s;
+    pointer-events: none; white-space: nowrap; z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><path d="M28.32,15.56l.96-.08c.63-.06.88-.2.88-.37V3.55h-.49c-1.92.08-3.04,1.47-3.63,2.81l-.22.73h-.55l.53-3.96h11.54l.26,3.93h-.49l-.22-.71c-.59-1.47-1.69-2.79-3.55-2.81h-.53v11.62c0,.16.14.22,1.04.31l.79.08.06.33h-6.44l.06-.33Z" fill="#231f20"/><path d="M36.38,11.67c0-2.81,2.04-4.97,4.79-4.97,2.22,0,3.44,1.37,3.44,2.98,0,.18-.02.39-.06.57,0,0-5.28-.04-5.67-.08-.04.2-.04.57-.04.77,0,2.24,1.24,3.75,3.04,3.75,1.08,0,1.94-.45,2.59-1.51l.25.12c-.82,1.83-2.14,2.89-4.1,2.89-2.43,0-4.24-1.92-4.24-4.53ZM42.33,9.79c.02-1.37-.39-2.65-1.43-2.65-.96,0-1.81,1.06-2,2.67l3.42-.02Z" fill="#231f20"/><path d="M45.13,15.56l.35-.02c.59-.04.82-.1.82-.35v-5.46c0-1.26-.14-1.45-.86-1.63l-.43-.1.02-.24,3.63-1-.04,1.69h.06c.88-.82,1.96-1.71,3.26-1.71.67,0,1.22.24,1.65.65.27.29.45.65.55,1.1l.06.02c.94-.92,2.06-1.77,3.36-1.77.67,0,1.2.22,1.65.65.47.49.67,1.37.67,2.59v5.22c0,.14.04.25.98.35l.29.02.06.33h-4.83l.06-.33.39-.02c.67-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.69-1.98-.65,0-1.37.33-1.59.71,0,.02-.02.73-.02.77v5.44c0,.16.06.22.9.33l.33.02.06.33h-4.77l.06-.33.37-.02c.63-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.67-1.98-.67,0-1.2.29-1.63.59v6.34c0,.18.08.26.88.33l.35.02.06.33h-4.85l.06-.33Z" fill="#231f20"/><path d="M60.87,20.68l.43-.04c.57-.04.82-.08.82-.33v-10.6c0-1.24-.16-1.43-.86-1.61l-.45-.1.02-.24,3.63-1-.02,1.79.06.02c.82-.98,1.88-1.75,3.12-1.75,2.08,0,3.65,1.85,3.65,4.34,0,3.2-2.45,5.01-4.87,5.01-.78,0-1.45-.14-1.92-.33h-.04v4.51c0,.16.12.26.96.29l.71.04.06.33h-5.36l.06-.33ZM68.72,11.87c0-2.06-.96-3.59-2.47-3.59-.75,0-1.37.37-1.81.8v4.91c.57,1.02,1.43,1.75,2.24,1.75,1.26,0,2.04-1.67,2.04-3.87Z" fill="#231f20"/><path d="M71.72,11.46c0-2.63,2.06-4.75,4.97-4.75s4.79,2.08,4.79,4.65-2.06,4.81-4.97,4.81-4.79-2.1-4.79-4.71ZM78.85,11.67c0-2-.37-3.34-1.02-4-.31-.31-.69-.53-1.26-.53-1.47,0-2.26,1.75-2.26,4.04,0,2.04.35,3.38,1,4.06.31.33.73.53,1.28.53,1.43,0,2.26-1.77,2.26-4.1Z" fill="#231f20"/><path d="M87.32,13.3c-.63,1.81-.63,2.08.78,2.22l.65.06.06.31h-4.36l.06-.31.51-.06c1.04-.14,1.2-.37,2.36-3.53l2.71-7.58-.16-.59c.37-.12.98-.61,1.14-.94h.22l3.77,11.15c.41,1.18.57,1.43,1.33,1.49l.77.06.06.31h-5.26l.06-.31.84-.06c.69-.04.92-.37.61-1.3l-1.18-3.61h-4.02l-.96,2.69ZM90.38,4.8h-.06s-1.9,5.4-1.92,5.4h3.75l-1.77-5.4Z" fill="#231f20"/><path d="M103.41,14.52l-.06-.02c-.78.9-1.79,1.65-3.1,1.65-2.06,0-3.67-1.79-3.67-4.36,0-3,2.24-4.85,4.61-4.85.88,0,1.55.18,2.18.49h.04v-3.57c0-.61-.1-.82-.63-.88l-.98-.16.04-.22,2.96-.59v12.74c0,.39.08.53.41.57l1.02.16-.02.22-2.79.51v-1.69ZM103.41,14.03v-5.08c-.51-.9-1.47-1.63-2.53-1.63-1.69,0-2.73,1.69-2.73,3.98s1.14,3.89,2.9,3.89c1.06,0,1.75-.53,2.36-1.16Z" fill="#231f20"/><path d="M106.85,8.51c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.12l-.04.29-.51.04c-.63.04-.73.27-.49.9l2.3,5.81,1.83-4.83c.57-1.53.49-1.77-.59-1.85l-.47-.06-.06-.29h3.47l-.06.29-.39.04c-.75.08-.84.33-1.53,2.04l-2.55,6.56h-.45l-3.04-7.56Z" fill="#231f20"/><path d="M114.38,15.58l.57-.02c.51-.04.71-.08.71-.31v-5.97c0-1.1-.14-1.3-.75-1.41l-.63-.1.04-.2,2.75-.69v8.42c0,.16.1.2.84.27l.51.02.06.31h-4.16l.06-.31ZM115.15,4c0-.47.33-1.06,1.02-1.06s1,.59,1,1.04-.33,1.04-1,1.04-1.02-.59-1.02-1.02Z" fill="#231f20"/><path d="M118.99,15.7l-.18-2.47h.35l.43,1.18c.51.9,1.28,1.41,2.16,1.41,1.18,0,2.04-.73,2.04-1.77,0-1.12-.92-1.63-2.26-2.08-1.22-.43-2.49-1.02-2.49-2.59,0-1.45,1.24-2.55,2.96-2.55.71,0,1.3.14,1.83.35l.65-.2.12,2.45h-.35l-.84-1.71c-.35-.26-.86-.53-1.49-.53-1.1,0-1.75.61-1.75,1.53,0,1.08.88,1.45,2.14,1.9,1.37.49,2.67,1.04,2.67,2.75,0,1.49-1.26,2.81-3.38,2.81-1,0-1.86-.18-2.61-.47Z" fill="#231f20"/><path d="M125.57,11.55c0-2.63,2-4.71,4.61-4.71s4.5,1.98,4.5,4.57-1.98,4.77-4.57,4.77-4.55-2-4.55-4.63ZM133.06,11.71c0-1.55-.35-2.96-1.12-3.73-.45-.45-1.04-.79-1.83-.79-1.75,0-2.89,1.88-2.89,4.06,0,1.61.37,3.04,1.16,3.83.43.45,1.04.75,1.81.75,1.69,0,2.87-1.88,2.87-4.12Z" fill="#231f20"/><path d="M135.1,15.58l.53-.02c.53-.04.73-.08.73-.31v-5.97c0-1.1-.14-1.3-.73-1.41l-.63-.1.02-.2,2.75-.69-.04,3.18h.04c.75-2.1,1.59-3.22,2.75-3.22.71,0,1.16.49,1.16,1.02s-.35,1-.94,1c-.49,0-.96-.35-1.04-1.04-.82.24-1.41,1.2-1.96,2.94v4.55c0,.16.08.22.79.27l.84.02.06.31h-4.4l.06-.31Z" fill="#231f20"/><path d="M141.89,20.19c0-.53.39-.94.94-.94s.94.39,1.06.94c.63-.16.96-.9,1.43-2.3l.59-1.81v-.02l-3.24-7.54c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.1l-.04.29-.47.04c-.63.04-.73.27-.49.9l2.39,5.77,1.75-4.83c.53-1.49.43-1.71-.65-1.81l-.47-.06-.06-.29h3.49l-.06.29-.43.04c-.75.08-.84.33-1.47,2.04l-2.37,6.32-.75,2.41c-.61,1.96-1.26,2.92-2.49,2.92-.67,0-1.2-.43-1.2-.96Z" fill="#231f20"/><circle cx="3.15" cy="3.15" r="3.15" fill="#231f20"/><circle cx="3.15" cy="9.44" r="3.15" fill="#231f20"/><circle cx="3.15" cy="15.74" r="3.15" fill="#231f20"/><circle cx="9.44" cy="15.74" r="3.15" fill="#231f20"/><circle cx="15.74" cy="15.74" r="3.15" fill="#58595b"/><circle cx="9.44" cy="9.44" r="3.15" fill="#231f20"/><circle cx="15.74" cy="9.44" r="3.15" fill="#d1d3d4"/><circle cx="15.74" cy="3.15" r="3.15" fill="#d1d3d4"/><circle cx="9.44" cy="3.15" r="3.15" fill="#d1d3d4"/></svg>
+    <div class="wordmark-sub">COMMUNICATION HUB</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab on" id="tCapture" onclick="event.stopPropagation(); goView('capture')">Capture</div>
+    <div class="tab" id="tFeed" onclick="event.stopPropagation(); goView('feed')">Feed <span class="feed-dot" id="fDot"></span></div>
+  </div>
+
+  <!-- ══ CAPTURE VIEW ══ -->
+  <div id="vCapture" class="view on">
+    <div class="cap-scroll">
+
+      <!-- Mode tiles -->
+      <div class="mode-row">
+        <div class="mode-tile on" id="mType" onclick="setMode('type')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="14" y1="18" x2="3" y2="18"/></svg>
+          <span>Type</span>
+        </div>
+        <div class="mode-tile" id="mVoice" onclick="setMode('voice')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          <span>Voice</span>
+        </div>
+        <div class="mode-tile" id="mCamera" onclick="setMode('camera')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Camera</span>
+        </div>
+        <div class="mode-tile" id="mGallery" onclick="setMode('gallery')">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Gallery</span>
+        </div>
+      </div>
+
+      <!-- Input section card -->
+      <div class="input-card">
+        <div class="input-card-label" id="inputCardLabel">Add task</div>
+
+        <!-- Type -->
+        <div class="panel on" id="pType">
+          <textarea class="task-ta" id="taskTa" placeholder="What needs doing?"></textarea>
+        </div>
+
+        <!-- Voice -->
+        <div class="panel" id="pVoice">
+        <div class="voice-wrap">
+          <div class="mic-btn" id="micBtn" onclick="toggleVoice()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </div>
+          <div class="voice-lbl" id="voiceLbl">Tap to record</div>
+        </div>
+        <div class="voice-res" id="voiceRes"></div>
+      </div>
+
+      <!-- Camera -->
+      <div class="panel" id="pCamera">
+        <div class="img-box" onclick="document.getElementById('camFile').click()">
+          <img id="camImg" alt="">
+          <div class="img-ph" id="camPh">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Tap to open camera</span>
+          </div>
+        </div>
+        <input type="file" id="camFile" accept="image/*" capture="environment" onchange="handleImg(event,'cam')">
+        <input class="ctx-in" type="text" id="camCtx" placeholder="Add context — Claude will read the image">
+        <div class="ai-bar" id="camAI"><div class="ai-dot"></div><div class="ai-txt">Claude is reading the image…</div></div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="panel" id="pGallery">
+        <div class="img-box" onclick="document.getElementById('galFile').click()">
+          <img id="galImg" alt="">
+          <div class="img-ph" id="galPh">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Tap to choose from gallery</span>
+          </div>
+        </div>
+        <input type="file" id="galFile" accept="image/*" onchange="handleImg(event,'gal')">
+        <input class="ctx-in" type="text" id="galCtx" placeholder="Add context — Claude will read the screenshot">
+        <div class="ai-bar" id="galAI"><div class="ai-dot"></div><div class="ai-txt">Claude is reading the screenshot…</div></div>
+      </div>
+
+      </div><!-- /input-card -->
+
+      <button class="send-btn" onclick="sendCapture()">Send to feed</button>
+
+    </div>
+  </div>
+
+  <!-- ══ FEED VIEW ══ -->
+  <div id="vFeed" class="view">
+    <div class="feed-wrap">
+      <div class="feed-bar">
+        <div class="feed-stat" id="feedStat">6 open · 2 done</div>
+        <button class="clear-btn" onclick="clearDone()">Clear done</button>
+      </div>
+      <div class="list" id="theList">
+
+        <div class="sec-lbl">Urgent</div>
+
+        <div class="item urg">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">Call Cameron before Kirwan PCG — confirm he's read the DMA and has no blockers</div>
+            <span class="item-time">8 min ago</span>
+            <div class="item-tags">
+              <span class="tag">Kirwan</span>
+              </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item urg">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">Send Everland first invoice — due by 20/02/26</div>
+            <span class="item-time">Yesterday</span>
+            <div class="item-tags">
+              <span class="tag">Portfolio</span>
+              </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-lbl">Active</div>
+
+        <div class="item">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">Get updated accommodation schedule from Space Collective — arithmetic error outstanding</div>
+            <span class="item-time">2 days ago</span>
+            <div class="item-tags">
+              <span class="tag">Angove</span>
+            </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">Push Tao on Shareholders Agreement — priority before next Everland meeting</div>
+            <span class="item-time">3 days ago</span>
+            <div class="item-tags">
+              <span class="tag">Portfolio</span>
+            </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">Studio53 invoice — confirm scope covers FF&E or just design direction</div>
+            <span class="item-time">4 days ago</span>
+            <div class="item-tags">
+              <span class="tag">Kirwan</span>
+            </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text">DPLH contract renewal — flag to Paul by end of June for decision</div>
+            <span class="item-time">5 days ago</span>
+            <div class="item-tags">
+              <span class="tag">Portfolio</span>
+            </div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item" onclick="editItem(this)">Edit</button>
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item" id="imgCard">
+          <div class="cb" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="thumb-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Camera capture — tap to view
+            </div>
+            <img class="item-thumb"
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%23e8e8e8'/%3E%3Crect x='40' y='30' width='320' height='16' rx='3' fill='%23bbb'/%3E%3Crect x='40' y='58' width='240' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='82' width='280' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='106' width='200' height='12' rx='3' fill='%23ccc'/%3E%3Crect x='40' y='140' width='320' height='50' rx='4' fill='%23d4d4d4'/%3E%3Ctext x='200' y='170' text-anchor='middle' fill='%23999' font-size='12' font-family='Arial'%3EWhiteboard / document%3C/text%3E%3C/svg%3E"
+              alt="Captured image"
+              onclick="openLightbox(this)">
+            <div class="item-text">Review agenda items from whiteboard — three action points flagged for Kirwan PCG</div>
+            <span class="item-time">1 hour ago</span>
+            <div class="item-tags">
+              <span class="tag">Kirwan</span>
+            </div>
+          </div>
+          <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+          <div class="kebab-menu">
+            <button class="km-item" onclick="editItem(this)">Edit</button>
+            <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+          </div>
+        </div>
+
+        <div class="sec-lbl" id="doneLbl">Done</div>
+
+        <div class="item done">
+          <div class="cb ticked" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text struck">Update Engagements Register with Everland terms</div>
+            <span class="item-time">Done 10:14am</span>
+            <div class="item-tags"><span class="tag">Portfolio</span></div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item done">
+          <div class="cb ticked" onclick="tick(this)"></div>
+          <div class="item-body">
+            <div class="item-text struck">Confirm Daniel Rainone contact details in Project Register</div>
+            <span class="item-time">Done 9:02am</span>
+            <div class="item-tags"><span class="tag">Portfolio</span></div>
+            <button class="kebab" onclick="toggleKebab(this)">⋯</button>
+            <div class="kebab-menu">
+              <button class="km-item del" onclick="deleteItem(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab" id="fab" onclick="event.stopPropagation(); goView('capture')">
+    <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <img id="lbImg" src="" alt="">
+    <div class="lb-caption" id="lbCaption"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  var curMode = 'type';
+  var curAssignee = 'camille';
+  var voiceOn = false, voiceTimer = null;
+  var newItems = [
+    ['Review Filaro pre-sales strategy before ZSA ZSA meeting', 'Filaro', 'Paul'],
+    ['Confirm Space Collective fee timing under ECI approach', 'Filaro', 'Camille'],
+    ['Chase Ben Lisle — Treasury presentation still outstanding', 'Portfolio', 'Paul'],
+    ['Check JDSI FY2026 scorecard targets before meeting 84', 'Portfolio', 'Paul']
+  ];
+  var ni = 0;
+
+  function goView(name) {
+    ['capture','feed'].forEach(function(v) {
+      var cap = v.charAt(0).toUpperCase() + v.slice(1);
+      document.getElementById('v'+cap).className = v === name ? 'view on' : 'view';
+      document.getElementById('t'+cap).className = v === name ? 'tab on' : 'tab';
+    });
+    document.getElementById('fab').className = name === 'feed' ? 'fab vis' : 'fab';
+    updateCount();
+  }
+
+  function openLightbox(img) {
+    var lb = document.getElementById('lightbox');
+    var lbImg = document.getElementById('lbImg');
+    var caption = document.getElementById('lbCaption');
+    lbImg.src = img.src;
+    var card = img.closest('.item-body');
+    var taskText = card.querySelector('.item-text');
+    caption.textContent = taskText ? taskText.textContent : '';
+    lb.classList.add('open');
+  }
+
+  function closeLightbox(e) {
+    if (!e || e.target === document.getElementById('lightbox') || e.target.classList.contains('lb-close')) {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+  }
+  var labels = {type:'Add task', voice:'Record voice', camera:'Camera capture', gallery:'From gallery'};
+
+  function toggleKebab(btn) {
+    var menu = btn.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    if (!isOpen) menu.classList.add('open');
+  }
+
+  // Close kebab on click outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('kebab') && !e.target.classList.contains('km-item')) {
+      document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    }
+  });
+
+  function setMode(m) {
+    curMode = m;
+    ['type','voice','camera','gallery'].forEach(function(x) {
+      var xc = x.charAt(0).toUpperCase() + x.slice(1);
+      document.getElementById('m'+xc).className = x === m ? 'mode-tile on' : 'mode-tile';
+      document.getElementById('p'+xc).className = x === m ? 'panel on' : 'panel';
+    });
+    document.getElementById('inputCardLabel').textContent = labels[m] || 'Add task';
+  }
+
+  function toggleVoice() {
+    voiceOn = !voiceOn;
+    var btn = document.getElementById('micBtn');
+    var lbl = document.getElementById('voiceLbl');
+    var res = document.getElementById('voiceRes');
+    if (voiceOn) {
+      btn.className = 'mic-btn rec'; lbl.textContent = 'Recording…'; res.style.display = 'none';
+      voiceTimer = setTimeout(function() {
+        voiceOn = false; btn.className = 'mic-btn'; lbl.textContent = 'Tap to record';
+        res.style.display = 'block';
+        res.textContent = '"Follow up with Cameron on Kirwan DMA before end of week"';
+      }, 2500);
+    } else { clearTimeout(voiceTimer); btn.className = 'mic-btn'; lbl.textContent = 'Tap to record'; }
+  }
+
+  function handleImg(e, type) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = document.getElementById(type+'Img');
+      var ph = document.getElementById(type+'Ph');
+      var ai = document.getElementById(type+'AI');
+      img.src = ev.target.result; img.style.display = 'block'; ph.style.display = 'none';
+      ai.style.display = 'flex';
+      setTimeout(function() { ai.style.display = 'none'; }, 2200);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function sendCapture() {
+    var ok = false;
+    if (curMode === 'type' && document.getElementById('taskTa').value.trim()) ok = true;
+    if (curMode === 'voice' && document.getElementById('voiceRes').style.display !== 'none') ok = true;
+    if (curMode === 'camera' && document.getElementById('camImg').style.display === 'block') ok = true;
+    if (curMode === 'gallery' && document.getElementById('galImg').style.display === 'block') ok = true;
+    if (!ok) { showToast('Nothing to send'); return; }
+    injectItem();
+    document.getElementById('taskTa').value = '';
+    document.getElementById('voiceRes').style.display = 'none';
+    document.getElementById('voiceLbl').textContent = 'Tap to record';
+    ['cam','gal'].forEach(function(t) {
+      document.getElementById(t+'Img').style.display = 'none';
+      document.getElementById(t+'Ph').style.display = 'flex';
+      document.getElementById(t+'AI').style.display = 'none';
+    });
+    showToast('Sent to feed');
+    setTimeout(function() { goView('feed'); }, 500);
+  }
+
+  function injectItem() {
+    var list = document.getElementById('theList');
+    var d = newItems[ni % newItems.length]; ni++;
+    var assigneeName = curAssignee === 'paul' ? 'Paul' : 'Camille';
+    var div = document.createElement('div');
+    div.className = 'item'; div.style.opacity = '0';
+
+    var isImage = (curMode === 'camera' || curMode === 'gallery');
+    var imgSrc = isImage ? (document.getElementById(curMode === 'camera' ? 'camImg' : 'galImg').src) : null;
+    var thumbHtml = isImage && imgSrc ? (
+      '<div class="thumb-hint"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" width="10" height="10" stroke="#aaa"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera capture — tap to view</div>' +
+      '<img class="item-thumb" src="' + imgSrc + '" alt="" onclick="openLightbox(this)">'
+    ) : '';
+
+    div.innerHTML =
+      '<div class="cb" onclick="tick(this)"></div>' +
+      '<div class="item-body">' +
+        thumbHtml +
+        '<div class="item-text">' + d[0] + '</div>' +
+        '<span class="item-time">Just now</span>' +
+        '<div class="item-tags">' +
+          '<span class="tag">' + d[1] + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="kebab" onclick="toggleKebab(this)">⋯</button>' +
+      '<div class="kebab-menu">' +
+        '<button class="km-item" onclick="editItem(this)">Edit</button>' +
+        '<button class="km-item del" onclick="deleteItem(this)">Delete</button>' +
+      '</div>';
+
+    var doneLbl = document.getElementById('doneLbl');
+    list.insertBefore(div, doneLbl);
+    requestAnimationFrame(function() { div.style.transition = 'opacity 0.3s'; div.style.opacity = '1'; });
+    updateCount();
+  }
+
+  function tick(cb) {
+    cb.classList.toggle('ticked');
+    var item = cb.closest('.item');
+    var txt = item.querySelector('.item-text');
+    var done = cb.classList.contains('ticked');
+    txt.classList.toggle('struck', done);
+    item.classList.toggle('done', done);
+    if (done) { setTimeout(function() { document.getElementById('theList').appendChild(item); updateCount(); }, 350); }
+    else { updateCount(); }
+  }
+
+  function editItem(btn) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var item = btn.closest('.item');
+    var textDiv = item.querySelector('.item-text');
+    if (textDiv.querySelector('textarea')) return;
+    var current = textDiv.textContent.trim();
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'font-family:Arial,sans-serif;font-size:13px;font-weight:400;line-height:1.55;color:#000;background:white;border:1.5px solid #000;border-radius:4px;padding:5px 8px;width:100%;outline:none;resize:none;margin-bottom:4px;';
+    ta.value = current; ta.rows = 2;
+    textDiv.textContent = ''; textDiv.appendChild(ta);
+    ta.focus(); ta.select();
+    ta.addEventListener('blur', function() { textDiv.textContent = ta.value.trim() || current; });
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+      if (e.key === 'Escape') { ta.value = current; ta.blur(); }
+    });
+  }
+
+  function deleteItem(btn) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var item = btn.closest('.item');
+    item.style.transition = 'opacity 0.2s'; item.style.opacity = '0';
+    setTimeout(function() { item.remove(); updateCount(); }, 220);
+  }
+
+  function clearDone() {
+    document.querySelectorAll('.item.done').forEach(function(item) {
+      item.style.transition = 'opacity 0.22s'; item.style.opacity = '0';
+      setTimeout(function() { item.remove(); }, 250);
+    });
+    setTimeout(updateCount, 300);
+    showToast('Done items cleared');
+  }
+
+  function updateCount() {
+    var all = document.querySelectorAll('#theList .item').length;
+    var done = document.querySelectorAll('#theList .item.done').length;
+    var open = all - done;
+    document.getElementById('feedStat').textContent = open + ' open · ' + done + ' done';
+    document.getElementById('fDot').style.display = open > 0 ? 'inline-block' : 'none';
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show';
+    setTimeout(function() { t.className = 'toast'; }, 1800);
+  }
+
+  updateCount();
+</script>
+</body>
+</html>
