@@ -1008,7 +1008,7 @@
     var thumb = '';
     if (t.image_url) {
       thumb = '<div class="thumb-hint"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" width="10" height="10" stroke="#aaa"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera capture — tap to view</div>' +
-        '<img class="item-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
+        '<img class="item-thumb" src="' + esc(t.image_url) + '" alt="" loading="lazy" onclick="openLightbox(this)">';
     }
 
     var commentCls = t.has_comments ? ' commented' : '';
@@ -1060,7 +1060,7 @@
       .catch(function(err) { console.error('Upload error:', err); return null; });
   }
 
-  /* ── Capture flow — uploads image, sends to Claude, saves to Supabase ── */
+  /* ── Capture flow — uploads image, saves to Supabase ── */
   function sendCapture() {
     var rawInput = '';
     var imgEl = null;
@@ -1091,7 +1091,6 @@
       var task = {
         body: rawInput,
         urgent: false,
-        type: 'task',
         raw_input: rawInput,
         created_by: curAssignee
       };
@@ -1135,9 +1134,6 @@
     var t = tasks.find(function(t) { return t.id === id; });
     if (!t) return;
     var text = t.body || '';
-    if (t.actions && t.actions.length) {
-      text += '\n\nActions:\n' + t.actions.map(function(a) { return '- ' + a; }).join('\n');
-    }
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(function() {
         showToast('Copied');
@@ -1175,13 +1171,16 @@
 
   function deleteTask(id) {
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-    var item = document.querySelector('[data-id="' + id + '"]');
-    if (item) { item.style.transition = 'opacity 0.2s'; item.style.opacity = '0'; }
-    setTimeout(function() {
-      api('/api/tasks?id=' + id, { method: 'DELETE' }).then(loadTasks).catch(function() {
-        showToast('Error deleting'); loadTasks();
-      });
-    }, 220);
+    // Optimistic: remove from local array and re-render
+    var removed = null;
+    var idx = -1;
+    tasks.forEach(function(t, i) { if (t.id === id) { removed = t; idx = i; } });
+    if (idx > -1) tasks.splice(idx, 1);
+    renderFeed();
+    api('/api/tasks?id=' + id, { method: 'DELETE' }).catch(function() {
+      showToast('Error deleting');
+      if (removed) { tasks.splice(idx, 0, removed); renderFeed(); }
+    });
   }
 
   var editingId = null;
@@ -1362,11 +1361,13 @@
       mediaRecorder.start(1000); // collect chunks every second
     }).catch(function(err) {
       voiceOn = false;
+      mediaRecorder = null;
+      audioChunks = [];
       clearInterval(voiceTimerInterval);
       timer.style.display = 'none';
       btn.className = 'mic-btn';
       if (err.name === 'NotAllowedError') {
-        lbl.textContent = 'Mic access denied';
+        lbl.textContent = 'Mic access denied — check browser settings';
       } else {
         lbl.textContent = 'Tap to record';
         showToast('Mic error: ' + err.message);
@@ -1793,7 +1794,6 @@
       var html = '';
       comments.forEach(function(c) {
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
-        var cName = c.created_by ? c.created_by.charAt(0).toUpperCase() + c.created_by.slice(1) : '';
         html += '<div class="comment">' +
           '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
           '<div class="comment-body">' + esc(c.body) + '</div>' +
