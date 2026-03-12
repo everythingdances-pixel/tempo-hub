@@ -53,6 +53,7 @@
     .hdr { padding: 6px 20px 0; }
     .tabs { padding: 7px 20px 0; }
     .detail-hdr { padding-top: 6px; }
+    .fab { bottom: 80px; right: 20px; width: 56px; height: 56px; }
   }
 
   /* ── STATUS ── */
@@ -451,21 +452,21 @@
   /* FAB */
   .fab {
     position: absolute; bottom: 30px; right: 26px;
-    width: 44px; height: 44px;
-    background: var(--ink); border-radius: 8px;
+    width: 52px; height: 52px;
+    background: var(--ink); border-radius: 12px;
     display: none; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     transition: background 0.15s; z-index: 10;
   }
   .fab.vis { display: flex; }
   .fab:hover { background: var(--yellow); }
   .fab:hover svg line { stroke: var(--ink); }
-  .fab svg { width: 18px; height: 18px; }
+  .fab svg { width: 22px; height: 22px; }
   .fab svg line { stroke: white; stroke-width: 2.5; }
 
   /* TOAST */
   .toast {
-    position: absolute; bottom: 84px; left: 50%;
+    position: absolute; bottom: 100px; left: 50%;
     transform: translateX(-50%) translateY(6px);
     background: var(--ink); color: white;
     font-size: 10px; font-weight: 400;
