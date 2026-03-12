@@ -688,43 +688,68 @@
     return Math.floor(s / 86400) + ' days ago';
   }
 
-  /* ── Capture flow — sends to Claude then Supabase ── */
+  /* ── Image upload helper ── */
+  function uploadImage(imgEl) {
+    if (!imgEl || imgEl.style.display === 'none' || !imgEl.src) return Promise.resolve(null);
+    var src = imgEl.src;
+    if (!src.startsWith('data:')) return Promise.resolve(null);
+    var match = src.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!match) return Promise.resolve(null);
+    return api('/api/upload', {
+      method: 'POST',
+      body: JSON.stringify({ contentType: match[1], base64: match[2] })
+    }).then(function(r) { return r.url; })
+      .catch(function(err) { console.error('Upload error:', err); return null; });
+  }
+
+  /* ── Capture flow — uploads image, sends to Claude, saves to Supabase ── */
   function sendCapture() {
     var rawInput = '';
+    var imgEl = null;
     if (curMode === 'type') rawInput = document.getElementById('taskTa').value.trim();
     else if (curMode === 'voice') {
       var vr = document.getElementById('voiceRes');
       if (vr.style.display !== 'none') rawInput = vr.textContent.replace(/^"|"$/g, '');
     }
-    else if (curMode === 'camera') rawInput = document.getElementById('camCtx').value.trim() || 'Image captured via camera';
-    else if (curMode === 'gallery') rawInput = document.getElementById('galCtx').value.trim() || 'Screenshot uploaded';
+    else if (curMode === 'camera') {
+      rawInput = document.getElementById('camCtx').value.trim() || 'Image captured via camera';
+      imgEl = document.getElementById('camImg');
+    }
+    else if (curMode === 'gallery') {
+      rawInput = document.getElementById('galCtx').value.trim() || 'Screenshot uploaded';
+      imgEl = document.getElementById('galImg');
+    }
 
     if (!rawInput) { showToast('Nothing to send'); return; }
 
     var btn = document.querySelector('.send-btn');
     btn.textContent = 'SENDING…'; btn.disabled = true;
 
-    /* Step 1: Claude triage */
-    api('/api/claude', {
-      method: 'POST',
-      body: JSON.stringify({ input: rawInput })
-    }).catch(function() {
-      /* Fallback if Claude is unavailable */
-      return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
-    }).then(function(triaged) {
-      /* Step 2: Save to Supabase */
-      return api('/api/tasks', {
+    var imageUrl = null;
+
+    /* Step 1: Upload image if present */
+    uploadImage(imgEl).then(function(url) {
+      imageUrl = url;
+      /* Step 2: Claude triage */
+      return api('/api/claude', {
         method: 'POST',
-        body: JSON.stringify({
-          body: triaged.body || rawInput,
-          project: triaged.project || 'General',
-          urgent: triaged.urgent || false,
-          type: triaged.type || 'task',
-          actions: triaged.actions || [],
-          raw_input: rawInput,
-          created_by: curAssignee
-        })
+        body: JSON.stringify({ input: rawInput })
+      }).catch(function() {
+        return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
       });
+    }).then(function(triaged) {
+      /* Step 3: Save to Supabase */
+      var task = {
+        body: triaged.body || rawInput,
+        project: triaged.project || 'General',
+        urgent: triaged.urgent || false,
+        type: triaged.type || 'task',
+        actions: triaged.actions || [],
+        raw_input: rawInput,
+        created_by: curAssignee
+      };
+      if (imageUrl) task.image_url = imageUrl;
+      return api('/api/tasks', { method: 'POST', body: JSON.stringify(task) });
     }).then(function() {
       resetCapture();
       showToast('Sent to feed');
