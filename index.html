@@ -810,7 +810,7 @@
           </div>
         </div>
         <input type="file" id="camFile" accept="image/*" capture="environment" onchange="handleImg(event,'cam')">
-        <input class="ctx-in" type="text" id="camCtx" placeholder="Add context — Claude will read the image">
+        <input class="ctx-in" type="text" id="camCtx" placeholder="Add context for this image">
         <div class="ai-bar" id="camAI"><div class="ai-dot"></div><div class="ai-txt">Claude is reading the image…</div></div>
       </div>
 
@@ -824,6 +824,7 @@
           </div>
         </div>
         <input type="file" id="galFile" accept="image/*" onchange="handleImg(event,'gal')">
+        <input class="ctx-in" type="text" id="galCtx" placeholder="Add context for this screenshot">
       </div>
 
       </div><!-- /input-card -->
@@ -1088,7 +1089,7 @@
       imgEl = document.getElementById('camImg');
     }
     else if (curMode === 'gallery') {
-      rawInput = 'Screenshot capture';
+      rawInput = document.getElementById('galCtx').value.trim() || 'Screenshot capture';
       imgEl = document.getElementById('galImg');
     }
 
@@ -1144,6 +1145,7 @@
       if (aiBar) aiBar.style.display = 'none';
     });
     document.getElementById('camCtx').value = '';
+    document.getElementById('galCtx').value = '';
   }
 
   /* ── Copy task text ── */
