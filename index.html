@@ -938,7 +938,7 @@
       commentedIds = {};
       comments.forEach(function(c) { commentedIds[c.task_id] = true; });
       commentsLoaded = true;
-    }).catch(function() {});
+    }).catch(function(err) { console.error('Comment flags error:', err); });
   }
 
   function loadTasks() {
@@ -1792,6 +1792,11 @@
     var body = ta.value.trim();
     if (!body) return;
     ta.value = '';
+
+    // Optimistic: mark task as commented for blue border
+    commentedIds[activeTaskId] = true;
+    var t = tasks.find(function(t) { return t.id === activeTaskId; });
+    if (t) t.has_comments = true;
 
     // Optimistic: show comment immediately
     var el = document.getElementById('commentsList');
