@@ -372,6 +372,7 @@
     background: #f7f7f7;
     border: none;
     border-left: 4px solid var(--ink);
+    user-select: none; -webkit-user-select: none;
     border-radius: var(--radius);
     transition: opacity 0.3s;
     cursor: default;
@@ -1471,12 +1472,15 @@
 
   function initDrag() {
     var list = document.getElementById('theList');
+    // Touch: hold-to-drag (avoids scroll conflict)
     list.addEventListener('touchstart', dragStart, { passive: false });
     document.addEventListener('touchmove', dragMove, { passive: false });
     document.addEventListener('touchend', dragEnd);
-    // Mouse fallback
+    // Mouse: drag on movement (no hold delay needed)
     list.addEventListener('mousedown', function(e) {
-      dragStart({ target: e.target, touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){} });
+      if (e.button !== 0) return;
+      e.preventDefault();
+      dragStart({ target: e.target, touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){}, _mouse: true });
     });
     document.addEventListener('mousemove', function(e) {
       if (dragState) dragMove({ touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){} });
@@ -1492,6 +1496,7 @@
     if (e.target.closest('.cb') || e.target.closest('.kebab') || e.target.closest('.km-item') || e.target.closest('.item-thumb') || e.target.closest('.copy-btn')) return;
     var touch = e.touches[0];
     var rect = item.getBoundingClientRect();
+    var isMouse = !!e._mouse;
     dragState = {
       el: item,
       id: item.getAttribute('data-id'),
@@ -1500,19 +1505,26 @@
       offsetY: touch.clientY - rect.top,
       rect: rect,
       active: false,
+      isMouse: isMouse,
       lastOver: null,
-      lastAbove: false,
-      holdTimer: setTimeout(function() {
+      lastAbove: false
+    };
+
+    if (isMouse) {
+      // Mouse: activate immediately with visual hint, drag starts on move
+      item.classList.add('hold-hint');
+    } else {
+      // Touch: use timers to avoid scroll conflict
+      dragState.holdTimer = setTimeout(function() {
         if (!dragState) return;
-        // Visual hint — item is about to be grabbed
         item.classList.add('hold-hint');
         if (navigator.vibrate) navigator.vibrate(20);
-      }, 120),
-      activateTimer: setTimeout(function() {
+      }, 120);
+      dragState.activateTimer = setTimeout(function() {
         if (!dragState) return;
         activateDrag(touch);
-      }, 250)
-    };
+      }, 250);
+    }
   }
 
   function activateDrag(touch) {
@@ -1543,15 +1555,27 @@
     if (!dragState) return;
     var touch = e.touches[0];
 
-    // Cancel if moved too far before activation
+    // Not yet active — decide whether to activate or cancel
     if (!dragState.active) {
       var dx = Math.abs(touch.clientX - dragState.startX);
       var dy = Math.abs(touch.clientY - dragState.startY);
-      if (dx > 8 || dy > 8) {
-        clearTimeout(dragState.holdTimer);
-        clearTimeout(dragState.activateTimer);
-        if (dragState.el) dragState.el.classList.remove('hold-hint');
-        dragState = null;
+      if (dragState.isMouse) {
+        // Mouse: activate drag after 5px vertical movement
+        if (dy > 5) {
+          activateDrag(touch);
+        } else if (dx > 15) {
+          // Horizontal movement — cancel (probably selecting)
+          if (dragState.el) dragState.el.classList.remove('hold-hint');
+          dragState = null;
+        }
+      } else {
+        // Touch: cancel if moved before hold timer fires (user is scrolling)
+        if (dx > 8 || dy > 8) {
+          clearTimeout(dragState.holdTimer);
+          clearTimeout(dragState.activateTimer);
+          if (dragState.el) dragState.el.classList.remove('hold-hint');
+          dragState = null;
+        }
       }
       return;
     }
@@ -1580,11 +1604,12 @@
     }
   }
 
-  function dragEnd() {
+  function dragEnd(e) {
     if (!dragState) return;
     clearTimeout(dragState.holdTimer);
     clearTimeout(dragState.activateTimer);
     var wasActive = dragState.active;
+    var wasMouse = dragState.isMouse;
     var srcId = dragState.id;
     var overItem = dragState.lastOver;
     var above = dragState.lastAbove;
@@ -1600,6 +1625,13 @@
     });
 
     dragState = null;
+
+    // Mouse: if drag never activated, it was a click — trigger the normal action
+    if (wasMouse && !wasActive) {
+      var body = el.querySelector('.item-body');
+      if (body) body.click();
+      return;
+    }
     if (!wasActive || !overItem) return;
 
     var destId = overItem.getAttribute('data-id');
