@@ -1,5 +1,9 @@
-// /api/claude.js — Proxies requests to Anthropic API
+// /api/claude.js — Proxies requests to Anthropic API (text + vision)
 // Keeps the ANTHROPIC_API_KEY on the server, never exposed to the browser.
+
+export const config = {
+  api: { bodyParser: { sizeLimit: '10mb' } }
+};
 
 export default async function handler(req, res) {
   // Only allow POST
@@ -7,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { input } = req.body;
+  const { input, image_base64, image_content_type } = req.body;
 
   if (!input || typeof input !== 'string') {
     return res.status(400).json({ error: 'Missing or invalid "input" field' });
@@ -18,6 +22,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
   }
 
+  const hasImage = image_base64 && image_content_type;
+
   const systemPrompt = `You are the triage engine for Tempo Advisory's task capture system.
 Tempo Advisory is a boutique management consultancy. The two users are
 Paul Lakey (founder) and Camille Chen (director).
@@ -25,15 +31,34 @@ Paul Lakey (founder) and Camille Chen (director).
 Active projects: Kirwan, Filaro, Angove, Portfolio, FHL, WAPC, JDSI,
 Bethanie, Everland, Peters, Procurement, DPLH.
 
-When given a raw capture (text, voice transcript, or image description),
+When given a raw capture (text, voice transcript, or image),
 return ONLY valid JSON with these fields:
 - project: closest matching project name, or "General" if unclear
 - urgent: true if time-sensitive or explicitly flagged, otherwise false
 - type: one of "task", "note", "decision", "action", "question"
-- body: cleaned, concise version of the input (fix voice-to-text errors)
+- body: cleaned, concise version of the input. If an image is provided, describe what you see and extract any text, numbers, or key information from it. Combine with any user context provided.
 - actions: array of discrete action items extracted, empty array if none
 
 No preamble. No explanation. JSON only.`;
+
+  // Build message content — text only, or text + image
+  const contentParts = [];
+
+  if (hasImage) {
+    contentParts.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: image_content_type,
+        data: image_base64,
+      },
+    });
+  }
+
+  contentParts.push({
+    type: 'text',
+    text: input + (hasImage ? '\n\n(An image is attached — please read and extract its content)' : ''),
+  });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -48,7 +73,7 @@ No preamble. No explanation. JSON only.`;
         max_tokens: 1024,
         system: systemPrompt,
         messages: [
-          { role: 'user', content: input },
+          { role: 'user', content: contentParts },
         ],
       }),
     });

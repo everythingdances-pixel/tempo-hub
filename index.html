@@ -1084,11 +1084,11 @@
       rawInput = document.getElementById('voiceTa').value.trim();
     }
     else if (curMode === 'camera') {
-      rawInput = document.getElementById('camCtx').value.trim() || 'Image captured via camera';
+      rawInput = document.getElementById('camCtx').value.trim() || 'Please read and extract the content from this image';
       imgEl = document.getElementById('camImg');
     }
     else if (curMode === 'gallery') {
-      rawInput = document.getElementById('galCtx').value.trim() || 'Screenshot uploaded';
+      rawInput = document.getElementById('galCtx').value.trim() || 'Please read and extract the content from this screenshot';
       imgEl = document.getElementById('galImg');
     }
 
@@ -1099,14 +1099,30 @@
 
     var imageUrl = null;
 
+    // Extract image base64 if present (for Claude vision)
+    var imgBase64 = null;
+    var imgContentType = null;
+    if (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('data:')) {
+      var imgMatch = imgEl.src.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (imgMatch) {
+        imgContentType = imgMatch[1];
+        imgBase64 = imgMatch[2];
+      }
+    }
+
     /* Step 1: Upload image if present */
     uploadImage(imgEl).then(function(url) {
       imageUrl = url;
       /* Step 2: Claude triage (if toggle on) */
       if (claudeOn) {
+        var claudePayload = { input: rawInput };
+        if (imgBase64 && imgContentType) {
+          claudePayload.image_base64 = imgBase64;
+          claudePayload.image_content_type = imgContentType;
+        }
         return api('/api/claude', {
           method: 'POST',
-          body: JSON.stringify({ input: rawInput })
+          body: JSON.stringify(claudePayload)
         }).catch(function() {
           return { body: rawInput, project: 'General', urgent: false, type: 'task', actions: [] };
         });
