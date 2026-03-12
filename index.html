@@ -275,17 +275,6 @@
   }
   .ctx-in::placeholder { color: var(--ghost); }
 
-  .ai-bar {
-    display: none; align-items: center; gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border-left: 3px solid var(--yellow);
-    border-radius: 0 var(--radius) var(--radius) 0;
-  }
-  .ai-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); flex-shrink: 0; animation: blink 1.2s ease-in-out infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
-  .ai-txt { font-size: 11px; color: var(--sub); font-style: italic; }
-
   input[type=file] { display: none; }
 
   /* Copy button on feed card */
@@ -811,7 +800,6 @@
         </div>
         <input type="file" id="camFile" accept="image/*" capture="environment" onchange="handleImg(event,'cam')">
         <input class="ctx-in" type="text" id="camCtx" placeholder="Add context for this image">
-        <div class="ai-bar" id="camAI"><div class="ai-dot"></div><div class="ai-txt">Claude is reading the image…</div></div>
       </div>
 
       <!-- Gallery -->
@@ -899,7 +887,6 @@
   var tasks = [];
   var curMode = 'type';
   var curAssignee = localStorage.getItem('tempoUser') || '';
-  var recognition = null;
   var voiceOn = false;
 
   /* ── User identity ── */
@@ -1033,10 +1020,7 @@
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
         '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
-        '<span class="item-time">' + (t.done ? 'Done ' + ts : ts) + '</span>' +
-        '<div class="item-tags">' +
-          (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
-        '</div>' +
+        '<span class="item-time">' + (t.created_by ? esc(t.created_by.charAt(0).toUpperCase() + t.created_by.slice(1)) + ' · ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
@@ -1085,7 +1069,7 @@
       rawInput = document.getElementById('voiceTa').value.trim();
     }
     else if (curMode === 'camera') {
-      rawInput = document.getElementById('camCtx').value.trim() || 'Please read and extract the content from this image';
+      rawInput = document.getElementById('camCtx').value.trim() || 'Camera capture';
       imgEl = document.getElementById('camImg');
     }
     else if (curMode === 'gallery') {
@@ -1141,8 +1125,6 @@
     ['cam','gal'].forEach(function(t) {
       document.getElementById(t+'Img').style.display = 'none';
       document.getElementById(t+'Ph').style.display = 'flex';
-      var aiBar = document.getElementById(t+'AI');
-      if (aiBar) aiBar.style.display = 'none';
     });
     document.getElementById('camCtx').value = '';
     document.getElementById('galCtx').value = '';
@@ -1420,10 +1402,7 @@
     reader.onload = function(ev) {
       var img = document.getElementById(type+'Img');
       var ph = document.getElementById(type+'Ph');
-      var ai = document.getElementById(type+'AI');
       img.src = ev.target.result; img.style.display = 'block'; ph.style.display = 'none';
-      ai.style.display = 'flex';
-      setTimeout(function() { ai.style.display = 'none'; }, 2200);
     };
     reader.readAsDataURL(file);
   }
@@ -1514,6 +1493,9 @@
     if (!e.target.classList.contains('kebab') && !e.target.classList.contains('km-item')) {
       document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
     }
+  });
+  document.getElementById('theList').addEventListener('scroll', function() {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
   });
 
   /* ── Drag-to-reorder (touch + mouse) ── */
@@ -1788,8 +1770,9 @@
       var html = '';
       comments.forEach(function(c) {
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
+        var cName = c.created_by ? c.created_by.charAt(0).toUpperCase() + c.created_by.slice(1) : '';
         html += '<div class="comment">' +
-          '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
+          '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span> ' + esc(cName) + '</div>' +
           '<div class="comment-body">' + esc(c.body) + '</div>' +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
         '</div>';
@@ -1837,11 +1820,15 @@
   /* ── Init + polling ── */
   goView('feed');
   setInterval(function() {
+    if (document.hidden) return; // Save battery when tab not visible
     pollCount++;
-    // Refresh comment flags every 5th poll (~2.5 min)
     if (pollCount % 5 === 0) loadCommentFlags();
     loadTasks();
   }, 30000);
+  // Refresh immediately when user returns to the tab
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) loadTasks();
+  });
 </script>
 </body>
 </html>
