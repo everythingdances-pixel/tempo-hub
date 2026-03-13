@@ -419,10 +419,11 @@
   .file-chip {
     display: inline-flex; align-items: center; gap: 4px;
     background: #f0f4ff; border: 1px solid #d0d9f0;
-    border-radius: 8px; padding: 4px 10px;
+    border-radius: var(--radius); padding: 6px 10px;
     font-size: 11px; color: #2563eb; margin-top: 6px;
     text-decoration: none; cursor: pointer;
     transition: background 0.15s;
+    max-width: 80%; overflow: hidden; text-overflow: ellipsis;
   }
   .file-chip:hover { background: #e0ebff; }
   .clip-icon {
