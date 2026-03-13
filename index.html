@@ -665,11 +665,12 @@
   .user-pick {
     display: flex; flex-direction: column; align-items: center; gap: 10px;
     cursor: pointer; padding: 20px 28px; border-radius: 16px;
-    border: 2px solid var(--border);
+    border: 1.5px solid #e5e5e5;
     background: var(--bg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     transition: all 0.15s;
   }
-  .user-pick:hover { border-color: var(--ink); background: var(--yellow); }
+  .user-pick:hover { border-color: var(--yellow); background: var(--yellow); }
   .user-pick .avatar {
     width: 52px; height: 52px; border-radius: 50%;
     background: var(--ink); color: white;
