@@ -399,12 +399,13 @@
   }
   .attach-btn {
     display: inline-flex; align-items: center; gap: 5px;
-    background: var(--surface); border: 1.5px dashed var(--border);
-    border-radius: var(--radius); padding: 8px 14px;
-    font-size: 12px; color: var(--sub); cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    background: var(--surface); border: none;
+    border-radius: 8px; padding: 8px 14px;
+    font-size: 11px; font-weight: 400; color: var(--ghost); cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.07em; text-transform: uppercase;
   }
-  .attach-btn:hover { background: var(--surface-dk); border-color: var(--ghost); }
+  .attach-btn:hover { background: var(--yellow); color: var(--ink); }
   .attach-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
   .file-preview {
     display: flex; align-items: center; gap: 6px;
@@ -448,21 +449,6 @@
   .comment-mic-btn.dictating { color: var(--red); }
   .comment-mic-btn.dictating svg { animation: pulse-mic 1s infinite; }
   @keyframes pulse-mic { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-  /* Comment attach button — small inline */
-  .comment-attach-btn {
-    background: none; border: none; cursor: pointer;
-    color: var(--ghost); padding: 4px; display: flex; align-items: center;
-    transition: color 0.15s;
-  }
-  .comment-attach-btn:hover { color: var(--ink); }
-  .comment-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-  .comment-file-preview {
-    display: flex; align-items: center; gap: 6px;
-    background: #f0f4ff; border: 1px solid #d0d9f0;
-    border-radius: 8px; padding: 4px 8px; margin-bottom: 6px;
-    font-size: 10px; color: var(--ink);
-  }
-  .comment-file-preview .file-preview-name { font-size: 10px; }
 
   /* Comment preview on feed card */
   .item-comment-preview {
@@ -481,7 +467,7 @@
   .item-time {
     display: block;
     font-size: 10px; font-weight: 400; color: var(--ghost);
-    margin-bottom: 7px;
+    margin-top: 10px; margin-bottom: 7px;
   }
 
   .item-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
@@ -831,9 +817,10 @@
   .comment-kebab-menu.open { display: block; }
   .comment-edit-ta {
     width: 100%; border: none; border-bottom: 1.5px solid var(--ink);
-    background: transparent; font-family: inherit;
+    background: var(--bg); font-family: inherit;
     font-size: 13px; line-height: 1.55; color: var(--ink);
-    resize: none; outline: none; padding: 0;
+    resize: none; outline: none; padding: 4px 0;
+    user-select: text; -webkit-user-select: text;
   }
 
   .no-comments {
@@ -869,18 +856,20 @@
 </style>
 </head>
 <body>
+<!-- Hidden SVG defs — single copy of Tempo Advisory logo -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none"><defs><g id="tempoLogo"><path d="M28.32,15.56l.96-.08c.63-.06.88-.2.88-.37V3.55h-.49c-1.92.08-3.04,1.47-3.63,2.81l-.22.73h-.55l.53-3.96h11.54l.26,3.93h-.49l-.22-.71c-.59-1.47-1.69-2.79-3.55-2.81h-.53v11.62c0,.16.14.22,1.04.31l.79.08.06.33h-6.44l.06-.33Z" fill="#231f20"/><path d="M36.38,11.67c0-2.81,2.04-4.97,4.79-4.97,2.22,0,3.44,1.37,3.44,2.98,0,.18-.02.39-.06.57,0,0-5.28-.04-5.67-.08-.04.2-.04.57-.04.77,0,2.24,1.24,3.75,3.04,3.75,1.08,0,1.94-.45,2.59-1.51l.25.12c-.82,1.83-2.14,2.89-4.1,2.89-2.43,0-4.24-1.92-4.24-4.53ZM42.33,9.79c.02-1.37-.39-2.65-1.43-2.65-.96,0-1.81,1.06-2,2.67l3.42-.02Z" fill="#231f20"/><path d="M45.13,15.56l.35-.02c.59-.04.82-.1.82-.35v-5.46c0-1.26-.14-1.45-.86-1.63l-.43-.1.02-.24,3.63-1-.04,1.69h.06c.88-.82,1.96-1.71,3.26-1.71.67,0,1.22.24,1.65.65.27.29.45.65.55,1.1l.06.02c.94-.92,2.06-1.77,3.36-1.77.67,0,1.2.22,1.65.65.47.49.67,1.37.67,2.59v5.22c0,.14.04.25.98.35l.29.02.06.33h-4.83l.06-.33.39-.02c.67-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.69-1.98-.65,0-1.37.33-1.59.71,0,.02-.02.73-.02.77v5.44c0,.16.06.22.9.33l.33.02.06.33h-4.77l.06-.33.37-.02c.63-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.67-1.98-.67,0-1.2.29-1.63.59v6.34c0,.18.08.26.88.33l.35.02.06.33h-4.85l.06-.33Z" fill="#231f20"/><path d="M60.87,20.68l.43-.04c.57-.04.82-.08.82-.33v-10.6c0-1.24-.16-1.43-.86-1.61l-.45-.1.02-.24,3.63-1-.02,1.79.06.02c.82-.98,1.88-1.75,3.12-1.75,2.08,0,3.65,1.85,3.65,4.34,0,3.2-2.45,5.01-4.87,5.01-.78,0-1.45-.14-1.92-.33h-.04v4.51c0,.16.12.26.96.29l.71.04.06.33h-5.36l.06-.33ZM68.72,11.87c0-2.06-.96-3.59-2.47-3.59-.75,0-1.37.37-1.81.8v4.91c.57,1.02,1.43,1.75,2.24,1.75,1.26,0,2.04-1.67,2.04-3.87Z" fill="#231f20"/><path d="M71.72,11.46c0-2.63,2.06-4.75,4.97-4.75s4.79,2.08,4.79,4.65-2.06,4.81-4.97,4.81-4.79-2.1-4.79-4.71ZM78.85,11.67c0-2-.37-3.34-1.02-4-.31-.31-.69-.53-1.26-.53-1.47,0-2.26,1.75-2.26,4.04,0,2.04.35,3.38,1,4.06.31.33.73.53,1.28.53,1.43,0,2.26-1.77,2.26-4.1Z" fill="#231f20"/><path d="M87.32,13.3c-.63,1.81-.63,2.08.78,2.22l.65.06.06.31h-4.36l.06-.31.51-.06c1.04-.14,1.2-.37,2.36-3.53l2.71-7.58-.16-.59c.37-.12.98-.61,1.14-.94h.22l3.77,11.15c.41,1.18.57,1.43,1.33,1.49l.77.06.06.31h-5.26l.06-.31.84-.06c.69-.04.92-.37.61-1.3l-1.18-3.61h-4.02l-.96,2.69ZM90.38,4.8h-.06s-1.9,5.4-1.92,5.4h3.75l-1.77-5.4Z" fill="#231f20"/><path d="M103.41,14.52l-.06-.02c-.78.9-1.79,1.65-3.1,1.65-2.06,0-3.67-1.79-3.67-4.36,0-3,2.24-4.85,4.61-4.85.88,0,1.55.18,2.18.49h.04v-3.57c0-.61-.1-.82-.63-.88l-.98-.16.04-.22,2.96-.59v12.74c0,.39.08.53.41.57l1.02.16-.02.22-2.79.51v-1.69ZM103.41,14.03v-5.08c-.51-.9-1.47-1.63-2.53-1.63-1.69,0-2.73,1.69-2.73,3.98s1.14,3.89,2.9,3.89c1.06,0,1.75-.53,2.36-1.16Z" fill="#231f20"/><path d="M106.85,8.51c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.12l-.04.29-.51.04c-.63.04-.73.27-.49.9l2.3,5.81,1.83-4.83c.57-1.53.49-1.77-.59-1.85l-.47-.06-.06-.29h3.47l-.06.29-.39.04c-.75.08-.84.33-1.53,2.04l-2.55,6.56h-.45l-3.04-7.56Z" fill="#231f20"/><path d="M114.38,15.58l.57-.02c.51-.04.71-.08.71-.31v-5.97c0-1.1-.14-1.3-.75-1.41l-.63-.1.04-.2,2.75-.69v8.42c0,.16.1.2.84.27l.51.02.06.31h-4.16l.06-.31ZM115.15,4c0-.47.33-1.06,1.02-1.06s1,.59,1,1.04-.33,1.04-1,1.04-1.02-.59-1.02-1.02Z" fill="#231f20"/><path d="M118.99,15.7l-.18-2.47h.35l.43,1.18c.51.9,1.28,1.41,2.16,1.41,1.18,0,2.04-.73,2.04-1.77,0-1.12-.92-1.63-2.26-2.08-1.22-.43-2.49-1.02-2.49-2.59,0-1.45,1.24-2.55,2.96-2.55.71,0,1.3.14,1.83.35l.65-.2.12,2.45h-.35l-.84-1.71c-.35-.26-.86-.53-1.49-.53-1.1,0-1.75.61-1.75,1.53,0,1.08.88,1.45,2.14,1.9,1.37.49,2.67,1.04,2.67,2.75,0,1.49-1.26,2.81-3.38,2.81-1,0-1.86-.18-2.61-.47Z" fill="#231f20"/><path d="M125.57,11.55c0-2.63,2-4.71,4.61-4.71s4.5,1.98,4.5,4.57-1.98,4.77-4.57,4.77-4.55-2-4.55-4.63ZM133.06,11.71c0-1.55-.35-2.96-1.12-3.73-.45-.45-1.04-.79-1.83-.79-1.75,0-2.89,1.88-2.89,4.06,0,1.61.37,3.04,1.16,3.83.43.45,1.04.75,1.81.75,1.69,0,2.87-1.88,2.87-4.12Z" fill="#231f20"/><path d="M135.1,15.58l.53-.02c.53-.04.73-.08.73-.31v-5.97c0-1.1-.14-1.3-.73-1.41l-.63-.1.02-.2,2.75-.69-.04,3.18h.04c.75-2.1,1.59-3.22,2.75-3.22.71,0,1.16.49,1.16,1.02s-.35,1-.94,1c-.49,0-.96-.35-1.04-1.04-.82.24-1.41,1.2-1.96,2.94v4.55c0,.16.08.22.79.27l.84.02.06.31h-4.4l.06-.31Z" fill="#231f20"/><path d="M141.89,20.19c0-.53.39-.94.94-.94s.94.39,1.06.94c.63-.16.96-.9,1.43-2.3l.59-1.81v-.02l-3.24-7.54c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.1l-.04.29-.47.04c-.63.04-.73.27-.49.9l2.39,5.77,1.75-4.83c.53-1.49.43-1.71-.65-1.81l-.47-.06-.06-.29h3.49l-.06.29-.43.04c-.75.08-.84.33-1.47,2.04l-2.37,6.32-.75,2.41c-.61,1.96-1.26,2.92-2.49,2.92-.67,0-1.2-.43-1.2-.96Z" fill="#231f20"/><circle cx="3.15" cy="3.15" r="3.15" fill="#231f20"/><circle cx="3.15" cy="9.44" r="3.15" fill="#231f20"/><circle cx="3.15" cy="15.74" r="3.15" fill="#231f20"/><circle cx="9.44" cy="15.74" r="3.15" fill="#231f20"/><circle cx="15.74" cy="15.74" r="3.15" fill="#58595b"/><circle cx="9.44" cy="9.44" r="3.15" fill="#231f20"/><circle cx="15.74" cy="9.44" r="3.15" fill="#d1d3d4"/><circle cx="15.74" cy="3.15" r="3.15" fill="#d1d3d4"/><circle cx="9.44" cy="3.15" r="3.15" fill="#d1d3d4"/></g></defs></svg>
 <div class="phone">
 
   <!-- PIN SCREEN -->
   <div class="pin-screen" id="pinScreen">
-    <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><path d="M28.32,15.56l.96-.08c.63-.06.88-.2.88-.37V3.55h-.49c-1.92.08-3.04,1.47-3.63,2.81l-.22.73h-.55l.53-3.96h11.54l.26,3.93h-.49l-.22-.71c-.59-1.47-1.69-2.79-3.55-2.81h-.53v11.62c0,.16.14.22,1.04.31l.79.08.06.33h-6.44l.06-.33Z" fill="#231f20"/><path d="M36.38,11.67c0-2.81,2.04-4.97,4.79-4.97,2.22,0,3.44,1.37,3.44,2.98,0,.18-.02.39-.06.57,0,0-5.28-.04-5.67-.08-.04.2-.04.57-.04.77,0,2.24,1.24,3.75,3.04,3.75,1.08,0,1.94-.45,2.59-1.51l.25.12c-.82,1.83-2.14,2.89-4.1,2.89-2.43,0-4.24-1.92-4.24-4.53ZM42.33,9.79c.02-1.37-.39-2.65-1.43-2.65-.96,0-1.81,1.06-2,2.67l3.42-.02Z" fill="#231f20"/><path d="M45.13,15.56l.35-.02c.59-.04.82-.1.82-.35v-5.46c0-1.26-.14-1.45-.86-1.63l-.43-.1.02-.24,3.63-1-.04,1.69h.06c.88-.82,1.96-1.71,3.26-1.71.67,0,1.22.24,1.65.65.27.29.45.65.55,1.1l.06.02c.94-.92,2.06-1.77,3.36-1.77.67,0,1.2.22,1.65.65.47.49.67,1.37.67,2.59v5.22c0,.14.04.25.98.35l.29.02.06.33h-4.83l.06-.33.39-.02c.67-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.69-1.98-.65,0-1.37.33-1.59.71,0,.02-.02.73-.02.77v5.44c0,.16.06.22.9.33l.33.02.06.33h-4.77l.06-.33.37-.02c.63-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.67-1.98-.67,0-1.2.29-1.63.59v6.34c0,.18.08.26.88.33l.35.02.06.33h-4.85l.06-.33Z" fill="#231f20"/><path d="M60.87,20.68l.43-.04c.57-.04.82-.08.82-.33v-10.6c0-1.24-.16-1.43-.86-1.61l-.45-.1.02-.24,3.63-1-.02,1.79.06.02c.82-.98,1.88-1.75,3.12-1.75,2.08,0,3.65,1.85,3.65,4.34,0,3.2-2.45,5.01-4.87,5.01-.78,0-1.45-.14-1.92-.33h-.04v4.51c0,.16.12.26.96.29l.71.04.06.33h-5.36l.06-.33ZM68.72,11.87c0-2.06-.96-3.59-2.47-3.59-.75,0-1.37.37-1.81.8v4.91c.57,1.02,1.43,1.75,2.24,1.75,1.26,0,2.04-1.67,2.04-3.87Z" fill="#231f20"/><path d="M71.72,11.46c0-2.63,2.06-4.75,4.97-4.75s4.79,2.08,4.79,4.65-2.06,4.81-4.97,4.81-4.79-2.1-4.79-4.71ZM78.85,11.67c0-2-.37-3.34-1.02-4-.31-.31-.69-.53-1.26-.53-1.47,0-2.26,1.75-2.26,4.04,0,2.04.35,3.38,1,4.06.31.33.73.53,1.28.53,1.43,0,2.26-1.77,2.26-4.1Z" fill="#231f20"/><path d="M87.32,13.3c-.63,1.81-.63,2.08.78,2.22l.65.06.06.31h-4.36l.06-.31.51-.06c1.04-.14,1.2-.37,2.36-3.53l2.71-7.58-.16-.59c.37-.12.98-.61,1.14-.94h.22l3.77,11.15c.41,1.18.57,1.43,1.33,1.49l.77.06.06.31h-5.26l.06-.31.84-.06c.69-.04.92-.37.61-1.3l-1.18-3.61h-4.02l-.96,2.69ZM90.38,4.8h-.06s-1.9,5.4-1.92,5.4h3.75l-1.77-5.4Z" fill="#231f20"/><path d="M103.41,14.52l-.06-.02c-.78.9-1.79,1.65-3.1,1.65-2.06,0-3.67-1.79-3.67-4.36,0-3,2.24-4.85,4.61-4.85.88,0,1.55.18,2.18.49h.04v-3.57c0-.61-.1-.82-.63-.88l-.98-.16.04-.22,2.96-.59v12.74c0,.39.08.53.41.57l1.02.16-.02.22-2.79.51v-1.69ZM103.41,14.03v-5.08c-.51-.9-1.47-1.63-2.53-1.63-1.69,0-2.73,1.69-2.73,3.98s1.14,3.89,2.9,3.89c1.06,0,1.75-.53,2.36-1.16Z" fill="#231f20"/><path d="M106.85,8.51c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.12l-.04.29-.51.04c-.63.04-.73.27-.49.9l2.3,5.81,1.83-4.83c.57-1.53.49-1.77-.59-1.85l-.47-.06-.06-.29h3.47l-.06.29-.39.04c-.75.08-.84.33-1.53,2.04l-2.55,6.56h-.45l-3.04-7.56Z" fill="#231f20"/><path d="M114.38,15.58l.57-.02c.51-.04.71-.08.71-.31v-5.97c0-1.1-.14-1.3-.75-1.41l-.63-.1.04-.2,2.75-.69v8.42c0,.16.1.2.84.27l.51.02.06.31h-4.16l.06-.31ZM115.15,4c0-.47.33-1.06,1.02-1.06s1,.59,1,1.04-.33,1.04-1,1.04-1.02-.59-1.02-1.02Z" fill="#231f20"/><path d="M118.99,15.7l-.18-2.47h.35l.43,1.18c.51.9,1.28,1.41,2.16,1.41,1.18,0,2.04-.73,2.04-1.77,0-1.12-.92-1.63-2.26-2.08-1.22-.43-2.49-1.02-2.49-2.59,0-1.45,1.24-2.55,2.96-2.55.71,0,1.3.14,1.83.35l.65-.2.12,2.45h-.35l-.84-1.71c-.35-.26-.86-.53-1.49-.53-1.1,0-1.75.61-1.75,1.53,0,1.08.88,1.45,2.14,1.9,1.37.49,2.67,1.04,2.67,2.75,0,1.49-1.26,2.81-3.38,2.81-1,0-1.86-.18-2.61-.47Z" fill="#231f20"/><path d="M125.57,11.55c0-2.63,2-4.71,4.61-4.71s4.5,1.98,4.5,4.57-1.98,4.77-4.57,4.77-4.55-2-4.55-4.63ZM133.06,11.71c0-1.55-.35-2.96-1.12-3.73-.45-.45-1.04-.79-1.83-.79-1.75,0-2.89,1.88-2.89,4.06,0,1.61.37,3.04,1.16,3.83.43.45,1.04.75,1.81.75,1.69,0,2.87-1.88,2.87-4.12Z" fill="#231f20"/><path d="M135.1,15.58l.53-.02c.53-.04.73-.08.73-.31v-5.97c0-1.1-.14-1.3-.73-1.41l-.63-.1.02-.2,2.75-.69-.04,3.18h.04c.75-2.1,1.59-3.22,2.75-3.22.71,0,1.16.49,1.16,1.02s-.35,1-.94,1c-.49,0-.96-.35-1.04-1.04-.82.24-1.41,1.2-1.96,2.94v4.55c0,.16.08.22.79.27l.84.02.06.31h-4.4l.06-.31Z" fill="#231f20"/><path d="M141.89,20.19c0-.53.39-.94.94-.94s.94.39,1.06.94c.63-.16.96-.9,1.43-2.3l.59-1.81v-.02l-3.24-7.54c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.1l-.04.29-.47.04c-.63.04-.73.27-.49.9l2.39,5.77,1.75-4.83c.53-1.49.43-1.71-.65-1.81l-.47-.06-.06-.29h3.49l-.06.29-.43.04c-.75.08-.84.33-1.47,2.04l-2.37,6.32-.75,2.41c-.61,1.96-1.26,2.92-2.49,2.92-.67,0-1.2-.43-1.2-.96Z" fill="#231f20"/><circle cx="3.15" cy="3.15" r="3.15" fill="#231f20"/><circle cx="3.15" cy="9.44" r="3.15" fill="#231f20"/><circle cx="3.15" cy="15.74" r="3.15" fill="#231f20"/><circle cx="9.44" cy="15.74" r="3.15" fill="#231f20"/><circle cx="15.74" cy="15.74" r="3.15" fill="#58595b"/><circle cx="9.44" cy="9.44" r="3.15" fill="#231f20"/><circle cx="15.74" cy="9.44" r="3.15" fill="#d1d3d4"/><circle cx="15.74" cy="3.15" r="3.15" fill="#d1d3d4"/><circle cx="9.44" cy="3.15" r="3.15" fill="#d1d3d4"/></svg>
+    <svg class="wordmark" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><use href="#tempoLogo"/></svg>
     <input class="pin-input" id="pinInput" type="tel" maxlength="4" placeholder="····" autocomplete="off" inputmode="numeric">
     <div class="pin-hint" id="pinHint">Enter PIN</div>
   </div>
 
   <!-- USER PICKER OVERLAY -->
   <div class="user-picker" id="userPicker">
-    <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><path d="M28.32,15.56l.96-.08c.63-.06.88-.2.88-.37V3.55h-.49c-1.92.08-3.04,1.47-3.63,2.81l-.22.73h-.55l.53-3.96h11.54l.26,3.93h-.49l-.22-.71c-.59-1.47-1.69-2.79-3.55-2.81h-.53v11.62c0,.16.14.22,1.04.31l.79.08.06.33h-6.44l.06-.33Z" fill="#231f20"/><path d="M36.38,11.67c0-2.81,2.04-4.97,4.79-4.97,2.22,0,3.44,1.37,3.44,2.98,0,.18-.02.39-.06.57,0,0-5.28-.04-5.67-.08-.04.2-.04.57-.04.77,0,2.24,1.24,3.75,3.04,3.75,1.08,0,1.94-.45,2.59-1.51l.25.12c-.82,1.83-2.14,2.89-4.1,2.89-2.43,0-4.24-1.92-4.24-4.53ZM42.33,9.79c.02-1.37-.39-2.65-1.43-2.65-.96,0-1.81,1.06-2,2.67l3.42-.02Z" fill="#231f20"/><path d="M45.13,15.56l.35-.02c.59-.04.82-.1.82-.35v-5.46c0-1.26-.14-1.45-.86-1.63l-.43-.1.02-.24,3.63-1-.04,1.69h.06c.88-.82,1.96-1.71,3.26-1.71.67,0,1.22.24,1.65.65.27.29.45.65.55,1.1l.06.02c.94-.92,2.06-1.77,3.36-1.77.67,0,1.2.22,1.65.65.47.49.67,1.37.67,2.59v5.22c0,.14.04.25.98.35l.29.02.06.33h-4.83l.06-.33.39-.02c.67-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.69-1.98-.65,0-1.37.33-1.59.71,0,.02-.02.73-.02.77v5.44c0,.16.06.22.9.33l.33.02.06.33h-4.77l.06-.33.37-.02c.63-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.67-1.98-.67,0-1.2.29-1.63.59v6.34c0,.18.08.26.88.33l.35.02.06.33h-4.85l.06-.33Z" fill="#231f20"/><path d="M60.87,20.68l.43-.04c.57-.04.82-.08.82-.33v-10.6c0-1.24-.16-1.43-.86-1.61l-.45-.1.02-.24,3.63-1-.02,1.79.06.02c.82-.98,1.88-1.75,3.12-1.75,2.08,0,3.65,1.85,3.65,4.34,0,3.2-2.45,5.01-4.87,5.01-.78,0-1.45-.14-1.92-.33h-.04v4.51c0,.16.12.26.96.29l.71.04.06.33h-5.36l.06-.33ZM68.72,11.87c0-2.06-.96-3.59-2.47-3.59-.75,0-1.37.37-1.81.8v4.91c.57,1.02,1.43,1.75,2.24,1.75,1.26,0,2.04-1.67,2.04-3.87Z" fill="#231f20"/><path d="M71.72,11.46c0-2.63,2.06-4.75,4.97-4.75s4.79,2.08,4.79,4.65-2.06,4.81-4.97,4.81-4.79-2.1-4.79-4.71ZM78.85,11.67c0-2-.37-3.34-1.02-4-.31-.31-.69-.53-1.26-.53-1.47,0-2.26,1.75-2.26,4.04,0,2.04.35,3.38,1,4.06.31.33.73.53,1.28.53,1.43,0,2.26-1.77,2.26-4.1Z" fill="#231f20"/><path d="M87.32,13.3c-.63,1.81-.63,2.08.78,2.22l.65.06.06.31h-4.36l.06-.31.51-.06c1.04-.14,1.2-.37,2.36-3.53l2.71-7.58-.16-.59c.37-.12.98-.61,1.14-.94h.22l3.77,11.15c.41,1.18.57,1.43,1.33,1.49l.77.06.06.31h-5.26l.06-.31.84-.06c.69-.04.92-.37.61-1.3l-1.18-3.61h-4.02l-.96,2.69ZM90.38,4.8h-.06s-1.9,5.4-1.92,5.4h3.75l-1.77-5.4Z" fill="#231f20"/><path d="M103.41,14.52l-.06-.02c-.78.9-1.79,1.65-3.1,1.65-2.06,0-3.67-1.79-3.67-4.36,0-3,2.24-4.85,4.61-4.85.88,0,1.55.18,2.18.49h.04v-3.57c0-.61-.1-.82-.63-.88l-.98-.16.04-.22,2.96-.59v12.74c0,.39.08.53.41.57l1.02.16-.02.22-2.79.51v-1.69ZM103.41,14.03v-5.08c-.51-.9-1.47-1.63-2.53-1.63-1.69,0-2.73,1.69-2.73,3.98s1.14,3.89,2.9,3.89c1.06,0,1.75-.53,2.36-1.16Z" fill="#231f20"/><path d="M106.85,8.51c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.12l-.04.29-.51.04c-.63.04-.73.27-.49.9l2.3,5.81,1.83-4.83c.57-1.53.49-1.77-.59-1.85l-.47-.06-.06-.29h3.47l-.06.29-.39.04c-.75.08-.84.33-1.53,2.04l-2.55,6.56h-.45l-3.04-7.56Z" fill="#231f20"/><path d="M114.38,15.58l.57-.02c.51-.04.71-.08.71-.31v-5.97c0-1.1-.14-1.3-.75-1.41l-.63-.1.04-.2,2.75-.69v8.42c0,.16.1.2.84.27l.51.02.06.31h-4.16l.06-.31ZM115.15,4c0-.47.33-1.06,1.02-1.06s1,.59,1,1.04-.33,1.04-1,1.04-1.02-.59-1.02-1.02Z" fill="#231f20"/><path d="M118.99,15.7l-.18-2.47h.35l.43,1.18c.51.9,1.28,1.41,2.16,1.41,1.18,0,2.04-.73,2.04-1.77,0-1.12-.92-1.63-2.26-2.08-1.22-.43-2.49-1.02-2.49-2.59,0-1.45,1.24-2.55,2.96-2.55.71,0,1.3.14,1.83.35l.65-.2.12,2.45h-.35l-.84-1.71c-.35-.26-.86-.53-1.49-.53-1.1,0-1.75.61-1.75,1.53,0,1.08.88,1.45,2.14,1.9,1.37.49,2.67,1.04,2.67,2.75,0,1.49-1.26,2.81-3.38,2.81-1,0-1.86-.18-2.61-.47Z" fill="#231f20"/><path d="M125.57,11.55c0-2.63,2-4.71,4.61-4.71s4.5,1.98,4.5,4.57-1.98,4.77-4.57,4.77-4.55-2-4.55-4.63ZM133.06,11.71c0-1.55-.35-2.96-1.12-3.73-.45-.45-1.04-.79-1.83-.79-1.75,0-2.89,1.88-2.89,4.06,0,1.61.37,3.04,1.16,3.83.43.45,1.04.75,1.81.75,1.69,0,2.87-1.88,2.87-4.12Z" fill="#231f20"/><path d="M135.1,15.58l.53-.02c.53-.04.73-.08.73-.31v-5.97c0-1.1-.14-1.3-.73-1.41l-.63-.1.02-.2,2.75-.69-.04,3.18h.04c.75-2.1,1.59-3.22,2.75-3.22.71,0,1.16.49,1.16,1.02s-.35,1-.94,1c-.49,0-.96-.35-1.04-1.04-.82.24-1.41,1.2-1.96,2.94v4.55c0,.16.08.22.79.27l.84.02.06.31h-4.4l.06-.31Z" fill="#231f20"/><path d="M141.89,20.19c0-.53.39-.94.94-.94s.94.39,1.06.94c.63-.16.96-.9,1.43-2.3l.59-1.81v-.02l-3.24-7.54c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.1l-.04.29-.47.04c-.63.04-.73.27-.49.9l2.39,5.77,1.75-4.83c.53-1.49.43-1.71-.65-1.81l-.47-.06-.06-.29h3.49l-.06.29-.43.04c-.75.08-.84.33-1.47,2.04l-2.37,6.32-.75,2.41c-.61,1.96-1.26,2.92-2.49,2.92-.67,0-1.2-.43-1.2-.96Z" fill="#231f20"/><circle cx="3.15" cy="3.15" r="3.15" fill="#231f20"/><circle cx="3.15" cy="9.44" r="3.15" fill="#231f20"/><circle cx="3.15" cy="15.74" r="3.15" fill="#231f20"/><circle cx="9.44" cy="15.74" r="3.15" fill="#231f20"/><circle cx="15.74" cy="15.74" r="3.15" fill="#58595b"/><circle cx="9.44" cy="9.44" r="3.15" fill="#231f20"/><circle cx="15.74" cy="9.44" r="3.15" fill="#d1d3d4"/><circle cx="15.74" cy="3.15" r="3.15" fill="#d1d3d4"/><circle cx="9.44" cy="3.15" r="3.15" fill="#d1d3d4"/></svg>
+    <svg class="wordmark" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><use href="#tempoLogo"/></svg>
     <div class="user-picker-title">Who's this?</div>
     <div class="user-picker-row">
       <div class="user-pick" onclick="pickUser('camille')">
@@ -896,7 +885,7 @@
 
   <!-- HEADER -->
   <div class="hdr">
-    <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><path d="M28.32,15.56l.96-.08c.63-.06.88-.2.88-.37V3.55h-.49c-1.92.08-3.04,1.47-3.63,2.81l-.22.73h-.55l.53-3.96h11.54l.26,3.93h-.49l-.22-.71c-.59-1.47-1.69-2.79-3.55-2.81h-.53v11.62c0,.16.14.22,1.04.31l.79.08.06.33h-6.44l.06-.33Z" fill="#231f20"/><path d="M36.38,11.67c0-2.81,2.04-4.97,4.79-4.97,2.22,0,3.44,1.37,3.44,2.98,0,.18-.02.39-.06.57,0,0-5.28-.04-5.67-.08-.04.2-.04.57-.04.77,0,2.24,1.24,3.75,3.04,3.75,1.08,0,1.94-.45,2.59-1.51l.25.12c-.82,1.83-2.14,2.89-4.1,2.89-2.43,0-4.24-1.92-4.24-4.53ZM42.33,9.79c.02-1.37-.39-2.65-1.43-2.65-.96,0-1.81,1.06-2,2.67l3.42-.02Z" fill="#231f20"/><path d="M45.13,15.56l.35-.02c.59-.04.82-.1.82-.35v-5.46c0-1.26-.14-1.45-.86-1.63l-.43-.1.02-.24,3.63-1-.04,1.69h.06c.88-.82,1.96-1.71,3.26-1.71.67,0,1.22.24,1.65.65.27.29.45.65.55,1.1l.06.02c.94-.92,2.06-1.77,3.36-1.77.67,0,1.2.22,1.65.65.47.49.67,1.37.67,2.59v5.22c0,.14.04.25.98.35l.29.02.06.33h-4.83l.06-.33.39-.02c.67-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.69-1.98-.65,0-1.37.33-1.59.71,0,.02-.02.73-.02.77v5.44c0,.16.06.22.9.33l.33.02.06.33h-4.77l.06-.33.37-.02c.63-.04.73-.18.73-.35v-4.93c0-1.49-.59-1.98-1.67-1.98-.67,0-1.2.29-1.63.59v6.34c0,.18.08.26.88.33l.35.02.06.33h-4.85l.06-.33Z" fill="#231f20"/><path d="M60.87,20.68l.43-.04c.57-.04.82-.08.82-.33v-10.6c0-1.24-.16-1.43-.86-1.61l-.45-.1.02-.24,3.63-1-.02,1.79.06.02c.82-.98,1.88-1.75,3.12-1.75,2.08,0,3.65,1.85,3.65,4.34,0,3.2-2.45,5.01-4.87,5.01-.78,0-1.45-.14-1.92-.33h-.04v4.51c0,.16.12.26.96.29l.71.04.06.33h-5.36l.06-.33ZM68.72,11.87c0-2.06-.96-3.59-2.47-3.59-.75,0-1.37.37-1.81.8v4.91c.57,1.02,1.43,1.75,2.24,1.75,1.26,0,2.04-1.67,2.04-3.87Z" fill="#231f20"/><path d="M71.72,11.46c0-2.63,2.06-4.75,4.97-4.75s4.79,2.08,4.79,4.65-2.06,4.81-4.97,4.81-4.79-2.1-4.79-4.71ZM78.85,11.67c0-2-.37-3.34-1.02-4-.31-.31-.69-.53-1.26-.53-1.47,0-2.26,1.75-2.26,4.04,0,2.04.35,3.38,1,4.06.31.33.73.53,1.28.53,1.43,0,2.26-1.77,2.26-4.1Z" fill="#231f20"/><path d="M87.32,13.3c-.63,1.81-.63,2.08.78,2.22l.65.06.06.31h-4.36l.06-.31.51-.06c1.04-.14,1.2-.37,2.36-3.53l2.71-7.58-.16-.59c.37-.12.98-.61,1.14-.94h.22l3.77,11.15c.41,1.18.57,1.43,1.33,1.49l.77.06.06.31h-5.26l.06-.31.84-.06c.69-.04.92-.37.61-1.3l-1.18-3.61h-4.02l-.96,2.69ZM90.38,4.8h-.06s-1.9,5.4-1.92,5.4h3.75l-1.77-5.4Z" fill="#231f20"/><path d="M103.41,14.52l-.06-.02c-.78.9-1.79,1.65-3.1,1.65-2.06,0-3.67-1.79-3.67-4.36,0-3,2.24-4.85,4.61-4.85.88,0,1.55.18,2.18.49h.04v-3.57c0-.61-.1-.82-.63-.88l-.98-.16.04-.22,2.96-.59v12.74c0,.39.08.53.41.57l1.02.16-.02.22-2.79.51v-1.69ZM103.41,14.03v-5.08c-.51-.9-1.47-1.63-2.53-1.63-1.69,0-2.73,1.69-2.73,3.98s1.14,3.89,2.9,3.89c1.06,0,1.75-.53,2.36-1.16Z" fill="#231f20"/><path d="M106.85,8.51c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.12l-.04.29-.51.04c-.63.04-.73.27-.49.9l2.3,5.81,1.83-4.83c.57-1.53.49-1.77-.59-1.85l-.47-.06-.06-.29h3.47l-.06.29-.39.04c-.75.08-.84.33-1.53,2.04l-2.55,6.56h-.45l-3.04-7.56Z" fill="#231f20"/><path d="M114.38,15.58l.57-.02c.51-.04.71-.08.71-.31v-5.97c0-1.1-.14-1.3-.75-1.41l-.63-.1.04-.2,2.75-.69v8.42c0,.16.1.2.84.27l.51.02.06.31h-4.16l.06-.31ZM115.15,4c0-.47.33-1.06,1.02-1.06s1,.59,1,1.04-.33,1.04-1,1.04-1.02-.59-1.02-1.02Z" fill="#231f20"/><path d="M118.99,15.7l-.18-2.47h.35l.43,1.18c.51.9,1.28,1.41,2.16,1.41,1.18,0,2.04-.73,2.04-1.77,0-1.12-.92-1.63-2.26-2.08-1.22-.43-2.49-1.02-2.49-2.59,0-1.45,1.24-2.55,2.96-2.55.71,0,1.3.14,1.83.35l.65-.2.12,2.45h-.35l-.84-1.71c-.35-.26-.86-.53-1.49-.53-1.1,0-1.75.61-1.75,1.53,0,1.08.88,1.45,2.14,1.9,1.37.49,2.67,1.04,2.67,2.75,0,1.49-1.26,2.81-3.38,2.81-1,0-1.86-.18-2.61-.47Z" fill="#231f20"/><path d="M125.57,11.55c0-2.63,2-4.71,4.61-4.71s4.5,1.98,4.5,4.57-1.98,4.77-4.57,4.77-4.55-2-4.55-4.63ZM133.06,11.71c0-1.55-.35-2.96-1.12-3.73-.45-.45-1.04-.79-1.83-.79-1.75,0-2.89,1.88-2.89,4.06,0,1.61.37,3.04,1.16,3.83.43.45,1.04.75,1.81.75,1.69,0,2.87-1.88,2.87-4.12Z" fill="#231f20"/><path d="M135.1,15.58l.53-.02c.53-.04.73-.08.73-.31v-5.97c0-1.1-.14-1.3-.73-1.41l-.63-.1.02-.2,2.75-.69-.04,3.18h.04c.75-2.1,1.59-3.22,2.75-3.22.71,0,1.16.49,1.16,1.02s-.35,1-.94,1c-.49,0-.96-.35-1.04-1.04-.82.24-1.41,1.2-1.96,2.94v4.55c0,.16.08.22.79.27l.84.02.06.31h-4.4l.06-.31Z" fill="#231f20"/><path d="M141.89,20.19c0-.53.39-.94.94-.94s.94.39,1.06.94c.63-.16.96-.9,1.43-2.3l.59-1.81v-.02l-3.24-7.54c-.37-.84-.43-.96-1-1.02l-.49-.06-.06-.29h4.1l-.04.29-.47.04c-.63.04-.73.27-.49.9l2.39,5.77,1.75-4.83c.53-1.49.43-1.71-.65-1.81l-.47-.06-.06-.29h3.49l-.06.29-.43.04c-.75.08-.84.33-1.47,2.04l-2.37,6.32-.75,2.41c-.61,1.96-1.26,2.92-2.49,2.92-.67,0-1.2-.43-1.2-.96Z" fill="#231f20"/><circle cx="3.15" cy="3.15" r="3.15" fill="#231f20"/><circle cx="3.15" cy="9.44" r="3.15" fill="#231f20"/><circle cx="3.15" cy="15.74" r="3.15" fill="#231f20"/><circle cx="9.44" cy="15.74" r="3.15" fill="#231f20"/><circle cx="15.74" cy="15.74" r="3.15" fill="#58595b"/><circle cx="9.44" cy="9.44" r="3.15" fill="#231f20"/><circle cx="15.74" cy="9.44" r="3.15" fill="#d1d3d4"/><circle cx="15.74" cy="3.15" r="3.15" fill="#d1d3d4"/><circle cx="9.44" cy="3.15" r="3.15" fill="#d1d3d4"/></svg>
+    <svg class="wordmark" viewBox="0 0 150.65 21.15" aria-label="Tempo Advisory"><use href="#tempoLogo"/></svg>
     <div class="wordmark-sub">COMMUNICATION HUB</div>
     <div class="hdr-user" id="hdrUser" onclick="showUserPicker()">
       <div class="avatar-sm" id="hdrAvatar">C</div>
@@ -1206,8 +1195,12 @@
       });
     }
     return p.then(function() {
-      renderFeed();
-      renderPinView();
+      var h = tasksHash(tasks);
+      if (h !== lastTasksHash) {
+        lastTasksHash = h;
+        renderFeed();
+        renderPinView();
+      }
     }).catch(function(err) {
       console.error('Load error:', err);
       document.getElementById('feedStat').textContent = 'Could not load tasks';
@@ -1215,6 +1208,13 @@
   }
 
   var pollCount = 0;
+  var lastTasksHash = '';
+
+  function tasksHash(arr) {
+    return arr.map(function(t) {
+      return t.id + t.done + t.urgent + t.pinned + t.has_comments + (t.sort_order||'') + (t.updated_at||'');
+    }).join('|');
+  }
 
   /* ── Render feed from tasks array ── */
   function renderFeed() {
@@ -1410,30 +1410,9 @@
     document.getElementById('captureFileInput').value = '';
   }
 
-  function handleCommentFile(e) {
-    var file = e.target.files && e.target.files[0];
-    if (!file) return;
-    document.getElementById('commentFileName').textContent = file.name;
-    document.getElementById('commentFilePreview').style.display = 'flex';
-    showToast('Uploading…');
-    uploadFile(file).then(function(url) {
-      commentFileUrl = url;
-      commentFileName = file.name;
-      showToast('File attached');
-    }).catch(function(err) {
-      console.error('File upload error:', err);
-      showToast('Upload failed');
-      removeCommentFile();
-    });
-  }
-
   function removeCommentFile() {
     commentFileUrl = null;
     commentFileName = null;
-    var p = document.getElementById('commentFilePreview');
-    if (p) p.style.display = 'none';
-    var f = document.getElementById('commentFileInput');
-    if (f) f.value = '';
   }
 
   function fileChipHtml(fileUrl, fileName) {
@@ -1628,6 +1607,15 @@
 
     textDiv.textContent = ''; textDiv.appendChild(ta);
 
+    // Allow text selection while editing
+    item.style.userSelect = 'text';
+    item.style.webkitUserSelect = 'text';
+
+    // Stop clicks inside textarea from opening detail view
+    ta.addEventListener('click', function(e) { e.stopPropagation(); });
+    ta.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    ta.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+
     // Place cursor at end (not select all)
     ta.focus();
     ta.setSelectionRange(ta.value.length, ta.value.length);
@@ -1639,6 +1627,8 @@
       var newText = ta.value.trim() || current;
       textDiv.textContent = newText;
       editingId = null;
+      item.style.userSelect = '';
+      item.style.webkitUserSelect = '';
       if (timeEl) timeEl.style.display = '';
       if (copyEl) copyEl.style.display = '';
       if (kebabEl) kebabEl.style.display = '';
@@ -1687,6 +1677,16 @@
   var labels = {type:'Add task', voice:'Record voice', camera:'Camera capture', gallery:'From gallery'};
 
   function setMode(m) {
+    // Stop voice recording if switching away from voice
+    if (curMode === 'voice' && m !== 'voice' && voiceStream) {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try { mediaRecorder.stop(); } catch(e) {}
+      }
+      voiceStream.getTracks().forEach(function(t) { t.stop(); });
+      voiceStream = null;
+      mediaRecorder = null;
+      if (voiceTimerInterval) { clearInterval(voiceTimerInterval); voiceTimerInterval = null; }
+    }
     curMode = m;
     ['type','voice','camera','gallery'].forEach(function(x) {
       var xc = x.charAt(0).toUpperCase() + x.slice(1);
@@ -2049,12 +2049,16 @@
       document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
     }
   });
-  document.getElementById('theList').addEventListener('scroll', function() {
-    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-  });
-  document.getElementById('pinList').addEventListener('scroll', function() {
-    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
-  });
+  var scrollCloseTimer = null;
+  function onListScroll() {
+    if (scrollCloseTimer) return;
+    scrollCloseTimer = setTimeout(function() {
+      scrollCloseTimer = null;
+      document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    }, 100);
+  }
+  document.getElementById('theList').addEventListener('scroll', onListScroll);
+  document.getElementById('pinList').addEventListener('scroll', onListScroll);
 
   /* ── Drag-to-reorder (touch + mouse) ── */
   var dragState = null;
@@ -2301,7 +2305,7 @@
     var urgItemCls = t.urgent ? 'km-item urg-on' : 'km-item';
 
     scroll.innerHTML =
-      '<div class="detail-task' + (t.has_comments ? ' commented' : '') + (t.urgent ? ' urg' : '') + '">' +
+      '<div class="detail-task' + (t.has_comments ? ' commented' : '') + (t.urgent ? ' urg' : '') + '" data-id="' + t.id + '">' +
         thumbHtml +
         '<div class="detail-task-body">' + linkify(t.body) + '</div>' +
         detailFileHtml +
@@ -2311,7 +2315,7 @@
         '</div>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
-          '<button class="km-item" onclick="event.stopPropagation();editItem(\'' + t.id + '\')">Edit</button>' +
+          '<button class="km-item" onclick="event.stopPropagation();editDetailTask(\'' + t.id + '\')">Edit</button>' +
           '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',true)">Pin</button>' +
           '<button class="' + urgItemCls + '" onclick="event.stopPropagation();toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
           '<button class="km-item del" onclick="event.stopPropagation();deleteTask(\'' + t.id + '\')">Delete</button>' +
@@ -2334,6 +2338,57 @@
     document.getElementById('detailView').classList.remove('open');
     activeTaskId = null;
     goView('feed');
+  }
+
+  function editDetailTask(id) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var card = document.querySelector('.detail-task[data-id="' + id + '"]');
+    if (!card) return;
+    var bodyEl = card.querySelector('.detail-task-body');
+    if (!bodyEl || bodyEl.querySelector('textarea')) return;
+    var current = bodyEl.textContent.trim();
+
+    var t = tasks.find(function(t) { return t.id === id; });
+    // Use raw body from task data (preserves **bold** markers)
+    var rawBody = t ? t.body : current;
+
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'font-family:inherit;font-size:13px;font-weight:400;line-height:1.6;color:var(--ink);background:var(--bg);border:none;border-bottom:1.5px solid var(--ink);padding:4px 0;width:100%;outline:none;resize:none;user-select:text;-webkit-user-select:text;';
+    ta.value = rawBody;
+    ta.rows = Math.max(2, Math.ceil(rawBody.length / 40));
+
+    bodyEl.style.display = 'none';
+    bodyEl.parentNode.insertBefore(ta, bodyEl.nextSibling);
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+
+    // Stop events from bubbling
+    ta.addEventListener('click', function(e) { e.stopPropagation(); });
+    ta.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    ta.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+
+    var saved = false;
+    function save() {
+      if (saved) return;
+      saved = true;
+      var newText = ta.value.trim() || rawBody;
+      bodyEl.innerHTML = linkify(newText);
+      bodyEl.style.display = '';
+      ta.remove();
+      if (newText !== rawBody) {
+        if (t) t.body = newText;
+        lastTasksHash = ''; // force re-render on next poll
+        api('/api/tasks?id=' + id, { method: 'PATCH', body: JSON.stringify({ body: newText }) })
+          .then(function() { renderFeed(); renderPinView(); })
+          .catch(function() { showToast('Error saving edit'); });
+      }
+    }
+    ta.addEventListener('blur', save);
+    ta.addEventListener('keydown', function(e) {
+      handleBold(e);
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+      if (e.key === 'Escape') { ta.value = rawBody; ta.blur(); }
+    });
   }
 
   function loadComments(taskId) {
@@ -2379,6 +2434,7 @@
     var el = document.querySelector('[data-cid="' + cid + '"]');
     if (!el) return;
     var bodyEl = el.querySelector('.comment-body');
+    if (!bodyEl) return;
     var original = bodyEl.textContent;
     var ta = document.createElement('textarea');
     ta.className = 'comment-edit-ta';
@@ -2386,6 +2442,12 @@
     ta.rows = Math.max(2, original.split('\n').length);
     bodyEl.style.display = 'none';
     bodyEl.parentNode.insertBefore(ta, bodyEl.nextSibling);
+
+    // Allow text selection and prevent event stealing
+    ta.addEventListener('click', function(e) { e.stopPropagation(); });
+    ta.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    ta.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
+
     ta.focus();
     ta.selectionStart = ta.value.length;
 
@@ -2416,6 +2478,7 @@
     }
     ta.addEventListener('blur', save);
     ta.addEventListener('keydown', function(e) {
+      handleBold(e);
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
       if (e.key === 'Escape') { saved = true; ta.remove(); bodyEl.style.display = ''; }
     });
@@ -2666,25 +2729,50 @@
     });
   }
 
+  /* ── Ctrl+B to bold selected text in any textarea ── */
+  function handleBold(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      var ta = e.target;
+      var start = ta.selectionStart;
+      var end = ta.selectionEnd;
+      if (start === end) return; // nothing selected
+      var val = ta.value;
+      var sel = val.substring(start, end);
+      // Toggle: if already wrapped in **, remove; otherwise add
+      if (sel.startsWith('**') && sel.endsWith('**') && sel.length > 4) {
+        ta.value = val.substring(0, start) + sel.slice(2, -2) + val.substring(end);
+        ta.selectionStart = start;
+        ta.selectionEnd = end - 4;
+      } else {
+        ta.value = val.substring(0, start) + '**' + sel + '**' + val.substring(end);
+        ta.selectionStart = start;
+        ta.selectionEnd = end + 4;
+      }
+    }
+  }
+
   // Enter key to send comment
   document.getElementById('commentTa').addEventListener('keydown', function(e) {
+    handleBold(e);
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
   });
 
   /* ── Enter key sends from capture textarea ── */
   document.getElementById('taskTa').addEventListener('keydown', function(e) {
+    handleBold(e);
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCapture(); }
   });
 
 
   /* ── Init + polling ── */
   goView('feed');
-  setInterval(function() {
-    if (document.hidden) return; // Save battery when tab not visible
+  var pollRef = setInterval(function() {
+    if (document.hidden) return;
     pollCount++;
     if (pollCount % 5 === 0) loadCommentFlags();
     loadTasks();
-  }, 30000);
+  }, 60000);
   // Refresh immediately when user returns to the tab
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) loadTasks();
