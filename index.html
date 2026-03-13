@@ -425,6 +425,11 @@
     transition: background 0.15s;
   }
   .file-chip:hover { background: #e0ebff; }
+  .clip-icon {
+    width: 14px; height: 14px; flex-shrink: 0;
+    stroke: currentColor; fill: none; stroke-width: 2;
+    vertical-align: -2px;
+  }
   /* Comment attach button — small inline */
   .comment-attach-btn {
     background: none; border: none; cursor: pointer;
@@ -968,7 +973,7 @@
         </button>
       </div>
       <div class="file-preview" id="captureFilePreview" style="display:none;margin-top:8px;">
-        <span>📎</span>
+        <svg class="clip-icon" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         <span class="file-preview-name" id="captureFileName"></span>
         <button class="file-preview-remove" onclick="removeCaptureFile()">✕</button>
       </div>
@@ -1010,7 +1015,7 @@
     <div class="detail-scroll" id="detailScroll"></div>
     <div class="detail-input">
       <div class="comment-file-preview" id="commentFilePreview" style="display:none;">
-        <span>📎</span>
+        <svg class="clip-icon" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         <span class="file-preview-name" id="commentFileName"></span>
         <button class="file-preview-remove" onclick="removeCommentFile()">✕</button>
       </div>
@@ -1411,7 +1416,7 @@
   function fileChipHtml(fileUrl, fileName) {
     if (!fileUrl) return '';
     var name = fileName || 'attachment';
-    return '<a class="file-chip" href="' + esc(fileUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 ' + esc(name) + '</a>';
+    return '<a class="file-chip" href="' + esc(fileUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()"><svg class="clip-icon" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> ' + esc(name) + '</a>';
   }
 
   /* ── Capture flow — uploads image, saves to Supabase ── */
