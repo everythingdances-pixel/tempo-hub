@@ -448,6 +448,18 @@
     width: 24px; height: 24px; font-size: 12px;
     flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
   }
+  /* Comment mic/dictation button */
+  .comment-mic-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--ghost); padding: 4px; display: flex; align-items: center;
+    flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
+    transition: color 0.15s;
+  }
+  .comment-mic-btn:hover { color: var(--ink); }
+  .comment-mic-btn svg { width: 18px; height: 18px; }
+  .comment-mic-btn.dictating { color: var(--red); }
+  .comment-mic-btn.dictating svg { animation: pulse-mic 1s infinite; }
+  @keyframes pulse-mic { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
   /* Comment attach button — small inline */
   .comment-attach-btn {
     background: none; border: none; cursor: pointer;
@@ -1034,22 +1046,15 @@
     </div>
     <div class="detail-scroll" id="detailScroll"></div>
     <div class="detail-input">
-      <div class="comment-file-preview" id="commentFilePreview" style="display:none;">
-        <svg class="clip-icon" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-        <span class="file-preview-name" id="commentFileName"></span>
-        <button class="file-preview-remove" onclick="removeCommentFile()">✕</button>
-      </div>
       <div class="detail-input-wrap">
-        <button class="comment-attach-btn" onclick="document.getElementById('commentFileInput').click()">
-          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        <button class="comment-mic-btn" id="commentMicBtn" onclick="toggleCommentDictation()" title="Dictate comment">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
         </button>
-        <button class="bold-btn comment-bold-btn" onclick="toggleBold('commentTa')" title="Bold selected text"><b>B</b></button>
         <textarea class="detail-ta" id="commentTa" placeholder="Add a comment… (Shift+Enter for new line)" rows="1"></textarea>
         <button class="detail-send" onclick="postComment()">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
-      <input type="file" id="commentFileInput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip,.jpg,.jpeg,.png,.gif,.webp" onchange="handleCommentFile(event)">
     </div>
   </div>
 
@@ -2366,6 +2371,71 @@
       showToast('Error posting comment');
       if (activeTaskId === tid) loadComments(tid);
     });
+  }
+
+  /* ── Comment dictation (Web Speech API) ── */
+  var commentRecognition = null;
+  var commentDictating = false;
+
+  function toggleCommentDictation() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Speech recognition not supported');
+      return;
+    }
+
+    var btn = document.getElementById('commentMicBtn');
+    var ta = document.getElementById('commentTa');
+
+    if (commentDictating && commentRecognition) {
+      commentDictating = false;
+      commentRecognition.stop();
+      btn.classList.remove('dictating');
+      return;
+    }
+
+    commentRecognition = new SpeechRecognition();
+    commentRecognition.continuous = true;
+    commentRecognition.interimResults = true;
+    commentRecognition.lang = 'en-AU';
+
+    var finalText = ta.value;
+    commentDictating = true;
+    btn.classList.add('dictating');
+
+    commentRecognition.onresult = function(e) {
+      var interim = '';
+      var newFinal = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          newFinal += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      if (newFinal) {
+        finalText += (finalText ? ' ' : '') + newFinal;
+      }
+      ta.value = finalText + (interim ? ' ' + interim : '');
+    };
+
+    commentRecognition.onerror = function(e) {
+      console.error('Speech error:', e.error);
+      if (e.error !== 'no-speech') showToast('Mic error: ' + e.error);
+      commentDictating = false;
+      btn.classList.remove('dictating');
+    };
+
+    commentRecognition.onend = function() {
+      // Auto-restart if still in dictation mode (browser may stop after silence)
+      if (commentDictating) {
+        try { commentRecognition.start(); } catch(e) {}
+      } else {
+        btn.classList.remove('dictating');
+      }
+    };
+
+    commentRecognition.start();
   }
 
   // Enter key to send comment
