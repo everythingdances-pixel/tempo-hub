@@ -2627,28 +2627,21 @@
 
   function startWebSpeechDictation(btn, ta, SpeechRecognition) {
     commentRecognition = new SpeechRecognition();
-    commentRecognition.continuous = true;
-    commentRecognition.interimResults = true;
+    commentRecognition.continuous = false;
+    commentRecognition.interimResults = false;
     commentRecognition.lang = 'en-AU';
 
-    var finalText = ta.value;
     commentDictating = true;
     btn.classList.add('dictating');
 
     commentRecognition.onresult = function(e) {
-      var interim = '';
-      var newFinal = '';
-      for (var i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          newFinal += e.results[i][0].transcript;
-        } else {
-          interim += e.results[i][0].transcript;
-        }
+      var transcript = '';
+      for (var i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
       }
-      if (newFinal) {
-        finalText += (finalText ? ' ' : '') + newFinal;
+      if (transcript) {
+        ta.value = (ta.value ? ta.value + ' ' : '') + transcript.trim();
       }
-      ta.value = finalText + (interim ? ' ' + interim : '');
     };
 
     commentRecognition.onerror = function(e) {
@@ -2656,14 +2649,13 @@
       if (e.error !== 'no-speech') showToast('Mic error: ' + e.error);
       commentDictating = false;
       btn.classList.remove('dictating');
+      commentRecognition = null;
     };
 
     commentRecognition.onend = function() {
-      if (commentDictating) {
-        try { commentRecognition.start(); } catch(e) {}
-      } else {
-        btn.classList.remove('dictating');
-      }
+      commentDictating = false;
+      btn.classList.remove('dictating');
+      commentRecognition = null;
     };
 
     commentRecognition.start();
