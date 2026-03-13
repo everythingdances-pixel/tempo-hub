@@ -526,13 +526,13 @@
 
   ::-webkit-scrollbar { width: 0; }
 
-  /* ── PIN INDICATOR on feed cards ── */
-  .pin-icon {
-    display: inline-block; width: 10px; height: 10px;
-    margin-right: 3px; vertical-align: middle; margin-top: -1px;
-    fill: none; stroke: var(--ghost); stroke-width: 2;
+  /* ── PIN MARKER (replaces checkbox in pin view) ── */
+  .pin-marker {
+    width: 18px; height: 18px;
+    flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink);
   }
-  .item.pinned .pin-icon { stroke: var(--ink); }
 
   /* ── PIN SCREEN ── */
   .pin-screen {
@@ -1112,22 +1112,41 @@
 
     var commentCls = t.has_comments ? ' commented' : '';
     var pinnedCls = t.pinned ? ' pinned' : '';
+
+    // Pinned items: pin icon instead of checkbox, simplified kebab
+    if (t.pinned) {
+      return '<div class="item' + commentCls + ' pinned" data-id="' + t.id + '">' +
+        '<div class="pin-marker"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 3h6l-1 7h3l-5 7-5-7h3z"/></svg></div>' +
+        '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
+          thumb +
+          '<div class="item-text">' + esc(t.body) + '</div>' +
+          '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + ts + '</span>' +
+          '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+          '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
+          '<div class="kebab-menu">' +
+            '<button class="km-item" onclick="event.stopPropagation();editItem(\'' + t.id + '\')">Edit</button>' +
+            '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',false)">Unpin</button>' +
+            '<button class="km-item del" onclick="event.stopPropagation();deleteTask(\'' + t.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // Regular feed items
     var urgLabel = t.urgent ? 'Remove urgent' : 'Make urgent';
     var urgItemCls = t.urgent ? 'km-item' : 'km-item urg-action';
-    var pinLabel = t.pinned ? 'Unpin' : 'Pin';
-    var pinIcon = t.pinned ? '<svg class="pin-icon" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 7h3l-5 7-5-7h3z"/></svg>' : '';
 
-    return '<div class="item' + urgCls + doneCls + commentCls + pinnedCls + '" data-id="' + t.id + '">' +
+    return '<div class="item' + urgCls + doneCls + commentCls + '" data-id="' + t.id + '">' +
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
-        '<div class="item-text' + strCls + '">' + pinIcon + esc(t.body) + '</div>' +
+        '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
           '<button class="km-item" onclick="event.stopPropagation();editItem(\'' + t.id + '\')">Edit</button>' +
-          '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',' + !t.pinned + ')">' + pinLabel + '</button>' +
+          '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',true)">Pin</button>' +
           '<button class="' + urgItemCls + '" onclick="event.stopPropagation();toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
           '<button class="km-item del" onclick="event.stopPropagation();deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
