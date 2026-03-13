@@ -1307,7 +1307,10 @@
     var list = document.getElementById('pinList');
     var pinned = tasks.filter(function(t) { return t.pinned; });
     var sortFn = function(a, b) {
-      return new Date(b.created_at) - new Date(a.created_at);
+      if (a.sort_order != null && b.sort_order != null) return a.sort_order - b.sort_order;
+      if (a.sort_order == null && b.sort_order == null) return new Date(b.created_at) - new Date(a.created_at);
+      if (a.sort_order == null) return -1;
+      return 1;
     };
     pinned.sort(sortFn);
     var html = '';
