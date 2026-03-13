@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     let url;
     if (all === 'true') {
-      url = `${SUPABASE_URL}/rest/v1/comments?select=task_id&order=created_at.desc`;
+      url = `${SUPABASE_URL}/rest/v1/comments?select=task_id,body,created_by,created_at&order=created_at.desc`;
     } else {
       if (!task_id) return res.status(400).json({ error: 'Missing task_id' });
       url = `${SUPABASE_URL}/rest/v1/comments?task_id=eq.${task_id}&order=created_at.asc`;

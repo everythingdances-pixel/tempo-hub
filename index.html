@@ -388,6 +388,19 @@
   }
   .auto-link:hover { color: var(--ink); }
 
+  /* Comment preview on feed card */
+  .item-comment-preview {
+    margin-top: 6px; padding: 6px 8px;
+    background: #f0f4ff; border-left: 2px solid #2563eb;
+    border-radius: 0 4px 4px 0;
+    font-size: 11px; line-height: 1.5; color: var(--sub);
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .item-comment-preview .preview-by {
+    font-weight: 700; color: var(--ink); margin-right: 4px;
+  }
+
   .item-time {
     display: block;
     font-size: 10px; font-weight: 400; color: var(--ghost);
@@ -1035,12 +1048,20 @@
 
   /* ── Load tasks from Supabase ── */
   var commentedIds = {};
+  var latestComments = {};
   var commentsLoaded = false;
 
   function loadCommentFlags() {
     return api('/api/comments?all=true').then(function(comments) {
       commentedIds = {};
-      comments.forEach(function(c) { commentedIds[c.task_id] = true; });
+      latestComments = {};
+      comments.forEach(function(c) {
+        commentedIds[c.task_id] = true;
+        // First occurrence per task_id is the latest (ordered desc)
+        if (!latestComments[c.task_id]) {
+          latestComments[c.task_id] = c;
+        }
+      });
       commentsLoaded = true;
     }).catch(function(err) { console.error('Comment flags error:', err); });
   }
@@ -1119,6 +1140,16 @@
     var commentCls = t.has_comments ? ' commented' : '';
     var pinnedCls = t.pinned ? ' pinned' : '';
 
+    // Latest comment preview
+    var previewHtml = '';
+    var lc = latestComments[t.id];
+    if (lc) {
+      var lcName = lc.created_by ? lc.created_by.charAt(0).toUpperCase() + lc.created_by.slice(1) : '';
+      previewHtml = '<div class="item-comment-preview">' +
+        (lcName ? '<span class="preview-by">' + esc(lcName) + ':</span>' : '') +
+        linkify(lc.body) + '</div>';
+    }
+
     // Pinned items: pin icon instead of checkbox, simplified kebab
     if (t.pinned) {
       return '<div class="item' + commentCls + ' pinned" data-id="' + t.id + '">' +
@@ -1127,6 +1158,7 @@
           thumb +
           '<div class="item-text">' + linkify(t.body) + '</div>' +
           '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + ts + '</span>' +
+          previewHtml +
           '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
           '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
           '<div class="kebab-menu">' +
@@ -1148,6 +1180,7 @@
         thumb +
         '<div class="item-text' + strCls + '">' + linkify(t.body) + '</div>' +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
+        previewHtml +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
@@ -1989,10 +2022,12 @@
     if (!body) return;
     ta.value = '';
 
-    // Optimistic: mark task as commented for blue border
+    // Optimistic: mark task as commented for blue border + update preview
     commentedIds[activeTaskId] = true;
+    latestComments[activeTaskId] = { body: body, created_by: curAssignee, created_at: new Date().toISOString() };
     var t = tasks.find(function(t) { return t.id === activeTaskId; });
     if (t) t.has_comments = true;
+    renderFeed(); renderPinView();
 
     // Optimistic: show comment immediately
     var el = document.getElementById('commentsList');
