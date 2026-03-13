@@ -529,9 +529,9 @@
   /* ── PIN MARKER (replaces checkbox in pin view) ── */
   .pin-marker {
     width: 18px; height: 18px;
-    flex-shrink: 0; margin-top: 1px;
+    flex-shrink: 0; margin-top: 2px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--ink);
+    font-size: 14px; line-height: 1;
   }
 
   /* ── PIN SCREEN ── */
@@ -1116,7 +1116,7 @@
     // Pinned items: pin icon instead of checkbox, simplified kebab
     if (t.pinned) {
       return '<div class="item' + commentCls + ' pinned" data-id="' + t.id + '">' +
-        '<div class="pin-marker"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 3h6l-1 7h3l-5 7-5-7h3z"/></svg></div>' +
+        '<div class="pin-marker">📌</div>' +
         '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
           thumb +
           '<div class="item-text">' + esc(t.body) + '</div>' +
