@@ -1640,12 +1640,25 @@
           .catch(function() { showToast('Error saving edit'); });
       }
     }
+    // Save on blur, Enter, Escape, or clicking anywhere outside textarea
     ta.addEventListener('blur', save);
     ta.addEventListener('keydown', function(e) {
       handleBold(e);
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
       if (e.key === 'Escape') { ta.value = current; ta.blur(); }
     });
+    function outsideClick(e) {
+      if (e.target !== ta) {
+        document.removeEventListener('click', outsideClick, true);
+        document.removeEventListener('touchend', outsideClick, true);
+        save();
+      }
+    }
+    // Use capture phase so it fires before stopPropagation on card
+    setTimeout(function() {
+      document.addEventListener('click', outsideClick, true);
+      document.addEventListener('touchend', outsideClick, true);
+    }, 50);
   }
 
   function clearDone() {
@@ -2391,6 +2404,17 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
       if (e.key === 'Escape') { ta.value = rawBody; ta.blur(); }
     });
+    function outsideClick(e) {
+      if (e.target !== ta) {
+        document.removeEventListener('click', outsideClick, true);
+        document.removeEventListener('touchend', outsideClick, true);
+        save();
+      }
+    }
+    setTimeout(function() {
+      document.addEventListener('click', outsideClick, true);
+      document.addEventListener('touchend', outsideClick, true);
+    }, 50);
   }
 
   function loadComments(taskId) {
