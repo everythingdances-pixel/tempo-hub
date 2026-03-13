@@ -766,6 +766,7 @@
     background: #f7f7f7; border-left: 4px solid var(--ink);
     border-radius: var(--radius);
   }
+  .detail-task.commented { border-left-color: #2563eb; }
   .detail-task.urg { border-left-color: var(--red); }
   .detail-task-body {
     font-size: 12px; line-height: 1.6; color: var(--ink); margin-bottom: 8px;
@@ -2254,7 +2255,7 @@
     var detailFileHtml = fileChipHtml(t.file_url, t.file_name);
 
     scroll.innerHTML =
-      '<div class="detail-task' + (t.urgent ? ' urg' : '') + '">' +
+      '<div class="detail-task' + (t.has_comments ? ' commented' : '') + (t.urgent ? ' urg' : '') + '">' +
         thumbHtml +
         '<div class="detail-task-body">' + linkify(t.body) + '</div>' +
         detailFileHtml +
