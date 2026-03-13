@@ -1931,42 +1931,80 @@
   var capScroll = document.querySelector('.cap-scroll');
 
   capScroll.addEventListener('dragover', function(e) {
-    if (curMode !== 'gallery') return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    var box = document.querySelector('#pGallery .img-box');
-    if (box) box.style.background = 'var(--yellow)';
+    if (curMode === 'gallery') {
+      var box = document.querySelector('#pGallery .img-box');
+      if (box) box.style.background = 'var(--yellow)';
+    }
   });
 
   capScroll.addEventListener('dragleave', function(e) {
-    if (curMode !== 'gallery') return;
     var box = document.querySelector('#pGallery .img-box');
     if (box) box.style.background = '';
   });
 
   capScroll.addEventListener('drop', function(e) {
-    if (curMode !== 'gallery') return;
     e.preventDefault();
     e.stopPropagation();
-    galDropFlag = true;
-    setTimeout(function() { galDropFlag = false; }, 200);
     var box = document.querySelector('#pGallery .img-box');
     if (box) box.style.background = '';
     var file = e.dataTransfer.files[0];
-    if (file) loadImgFile(file, 'gal');
+    if (!file) return;
+
+    /* Image dropped in gallery mode → load as image */
+    if (curMode === 'gallery' && file.type.startsWith('image/')) {
+      galDropFlag = true;
+      setTimeout(function() { galDropFlag = false; }, 200);
+      loadImgFile(file, 'gal');
+    } else if (file.type.startsWith('image/')) {
+      /* Image dropped in other modes → switch to gallery and load */
+      setMode('gallery');
+      galDropFlag = true;
+      setTimeout(function() { galDropFlag = false; }, 200);
+      loadImgFile(file, 'gal');
+    } else {
+      /* Non-image file → attach as document */
+      showToast('Uploading…');
+      uploadFile(file).then(function(url) {
+        captureFileUrl = url;
+        captureFileName = file.name;
+        document.getElementById('captureFileName').textContent = file.name;
+        document.getElementById('captureFilePreview').style.display = 'flex';
+        document.querySelector('.attach-btn').style.display = 'none';
+        showToast('File attached');
+      }).catch(function() {
+        showToast('Upload failed');
+      });
+    }
   });
 
-  // Also allow drop anywhere on the page when gallery mode is active
+  // Allow drop anywhere on the page
   document.addEventListener('dragover', function(e) {
-    if (curMode !== 'gallery') return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
   });
   document.addEventListener('drop', function(e) {
-    if (curMode !== 'gallery') return;
     e.preventDefault();
     var file = e.dataTransfer.files[0];
-    if (file) loadImgFile(file, 'gal');
+    if (!file) return;
+
+    if (file.type.startsWith('image/')) {
+      if (curMode !== 'gallery') setMode('gallery');
+      loadImgFile(file, 'gal');
+    } else {
+      showToast('Uploading…');
+      uploadFile(file).then(function(url) {
+        captureFileUrl = url;
+        captureFileName = file.name;
+        document.getElementById('captureFileName').textContent = file.name;
+        document.getElementById('captureFilePreview').style.display = 'flex';
+        document.querySelector('.attach-btn').style.display = 'none';
+        showToast('File attached');
+      }).catch(function() {
+        showToast('Upload failed');
+      });
+    }
   });
 
   // Paste (Ctrl+V / Cmd+V) — works when gallery panel is active
