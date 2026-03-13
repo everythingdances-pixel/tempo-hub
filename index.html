@@ -61,7 +61,6 @@
     .hdr { padding: 0 20px 0; }
     .wordmark-sub { margin-top: 4px; }
     .tabs { padding: 7px 20px 0; }
-    .detail-hdr { padding-top: max(16px, env(safe-area-inset-top, 16px)); }
     .fab { bottom: 90px; right: 20px; width: 56px; height: 56px; }
     .list { padding-bottom: 90px; }
     .detail-input { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
@@ -731,15 +730,14 @@
   /* ── DETAIL / THREAD VIEW ── */
   .detail-view {
     display: none;
-    position: absolute; inset: 0;
-    background: var(--bg); z-index: 60;
-    flex-direction: column; overflow: hidden;
+    flex: 1; flex-direction: column; overflow: hidden;
+    background: var(--bg);
   }
   .detail-view.open { display: flex; }
 
   .detail-hdr {
     display: flex; align-items: center; gap: 10px;
-    padding: 20px 20px 12px; flex-shrink: 0;
+    padding: 12px 20px; flex-shrink: 0;
     border-bottom: 1px solid var(--border);
     background: var(--bg);
   }
@@ -2270,8 +2268,10 @@
       '<div class="comments-lbl">Comments</div>' +
       '<div id="commentsList"><div class="no-comments">Loading…</div></div>';
 
+    /* Hide all views, show detail below header+tabs */
     document.getElementById('vCapture').className = 'view';
     document.getElementById('vFeed').className = 'view';
+    document.getElementById('vPin').className = 'view';
     document.getElementById('detailView').classList.add('open');
     document.getElementById('fab').className = 'fab';
     document.getElementById('commentTa').value = '';
