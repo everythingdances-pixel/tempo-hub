@@ -190,11 +190,11 @@
   .a-btn.on { background: var(--ink); color: #fff; }
 
   /* Panels */
-  .panel { display: none; flex-direction: column; gap: 10px; }
+  .panel { display: none; flex-direction: column; gap: 10px; aspect-ratio: 16/12; }
   .panel.on { display: flex; }
 
   .task-ta {
-    width: 100%; aspect-ratio: 16/10;
+    width: 100%; flex: 1;
     background: transparent; border: none;
     border-radius: 0;
     padding: 4px 0;
@@ -209,7 +209,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     gap: 12px; padding: 14px 0 6px;
-    aspect-ratio: 16/10;
+    flex: 1;
   }
   .mic-btn {
     width: 68px; height: 68px; border-radius: 50%;
