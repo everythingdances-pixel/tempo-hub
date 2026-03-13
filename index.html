@@ -1587,7 +1587,8 @@
     if (!item) return;
     var textDiv = item.querySelector('.item-text');
     if (textDiv.querySelector('textarea')) return;
-    var current = textDiv.textContent.trim();
+    var t = tasks.find(function(t) { return t.id === id; });
+    var current = t ? t.body : textDiv.textContent.trim();
 
     // Hide other elements while editing
     var timeEl = item.querySelector('.item-time');
@@ -1625,7 +1626,7 @@
       if (saved) return;
       saved = true;
       var newText = ta.value.trim() || current;
-      textDiv.textContent = newText;
+      textDiv.innerHTML = linkify(newText);
       editingId = null;
       item.style.userSelect = '';
       item.style.webkitUserSelect = '';
@@ -1633,14 +1634,15 @@
       if (copyEl) copyEl.style.display = '';
       if (kebabEl) kebabEl.style.display = '';
       if (newText !== current) {
-        var t = tasks.find(function(t) { return t.id === id; });
         if (t) t.body = newText;
+        lastTasksHash = '';
         api('/api/tasks?id=' + id, { method: 'PATCH', body: JSON.stringify({ body: newText }) })
           .catch(function() { showToast('Error saving edit'); });
       }
     }
     ta.addEventListener('blur', save);
     ta.addEventListener('keydown', function(e) {
+      handleBold(e);
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
       if (e.key === 'Escape') { ta.value = current; ta.blur(); }
     });
