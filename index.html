@@ -436,7 +436,6 @@
     stroke: currentColor; fill: none; stroke-width: 2;
     vertical-align: -2px;
   }
-  /* Bold button */
   /* Comment mic/dictation button */
   .comment-mic-btn {
     background: none; border: none; cursor: pointer;
@@ -2351,6 +2350,15 @@
   }
 
   function closeDetail() {
+    // Clean up any active comment dictation
+    if (commentDictating) {
+      commentDictating = false;
+      var micBtn = document.getElementById('commentMicBtn');
+      if (micBtn) micBtn.classList.remove('dictating');
+      if (commentRecognition) { try { commentRecognition.stop(); } catch(e) {} commentRecognition = null; }
+      if (commentMicRecorder && commentMicRecorder.state !== 'inactive') { try { commentMicRecorder.stop(); } catch(e) {} }
+      if (commentMicStream) { commentMicStream.getTracks().forEach(function(t) { t.stop(); }); commentMicStream = null; }
+    }
     document.getElementById('detailView').classList.remove('open');
     activeTaskId = null;
     goView('feed');
