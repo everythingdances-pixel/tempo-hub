@@ -1961,8 +1961,8 @@
 
   /* ── Count + toast ── */
   function updateCount() {
-    var open = tasks.filter(function(t) { return !t.done; }).length;
-    var done = tasks.filter(function(t) { return t.done; }).length;
+    var open = tasks.filter(function(t) { return !t.done && !t.pinned; }).length;
+    var done = tasks.filter(function(t) { return t.done && !t.pinned; }).length;
     document.getElementById('feedStat').textContent = open + ' open · ' + done + ' done';
     document.getElementById('fDot').style.display = open > 0 ? 'inline-block' : 'none';
   }
