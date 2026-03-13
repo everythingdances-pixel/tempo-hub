@@ -53,5 +53,36 @@ export default async function handler(req, res) {
     return res.status(201).json(body?.[0] ?? body);
   }
 
+  // PATCH /api/comments?id=<uuid> — edit a comment
+  if (req.method === 'PATCH') {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Missing comment id' });
+
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/comments?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify(req.body),
+    });
+    const body = await r.json().catch(() => null);
+    if (!r.ok) return res.status(r.status).json({ error: 'Update error', detail: body });
+    return res.status(200).json(body?.[0] ?? body);
+  }
+
+  // DELETE /api/comments?id=<uuid> — delete a comment
+  if (req.method === 'DELETE') {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Missing comment id' });
+
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/comments?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: headers(),
+    });
+    if (!r.ok) {
+      const body = await r.json().catch(() => null);
+      return res.status(r.status).json({ error: 'Delete error', detail: body });
+    }
+    return res.status(200).json({ deleted: true });
+  }
+
   return res.status(405).json({ error: 'Method not allowed' });
 }

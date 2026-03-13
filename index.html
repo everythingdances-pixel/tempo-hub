@@ -718,6 +718,7 @@
   .comment {
     padding: 10px 14px;
     background: var(--surface); border-radius: 10px;
+    position: relative;
   }
   .comment-by {
     font-size: 9px; font-weight: 700; color: var(--ink);
@@ -726,9 +727,31 @@
   }
   .comment-body {
     font-size: 11px; line-height: 1.55; color: var(--ink);
+    padding-right: 20px;
   }
   .comment-time {
     font-size: 9px; color: var(--ghost); margin-top: 4px;
+  }
+  .comment-kebab {
+    position: absolute; top: 8px; right: 8px;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ghost); font-size: 12px;
+    background: none; border: none; transition: color 0.15s;
+  }
+  .comment-kebab:hover { color: var(--ink); }
+  .comment-kebab-menu {
+    display: none; position: absolute; top: 24px; right: 0;
+    background: white; border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    overflow: hidden; z-index: 50; min-width: 80px;
+  }
+  .comment-kebab-menu.open { display: block; }
+  .comment-edit-ta {
+    width: 100%; border: none; border-bottom: 1.5px solid var(--ink);
+    background: transparent; font-family: Arial, sans-serif;
+    font-size: 11px; line-height: 1.55; color: var(--ink);
+    resize: none; outline: none; padding: 0;
   }
 
   .no-comments {
@@ -2000,18 +2023,92 @@
       var html = '';
       comments.forEach(function(c) {
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
-        html += '<div class="comment">' +
+        html += '<div class="comment" data-cid="' + c.id + '">' +
           '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
           '<div class="comment-body">' + linkify(c.body) + '</div>' +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
+          '<button class="comment-kebab" onclick="toggleCommentKebab(this)">⋯</button>' +
+          '<div class="comment-kebab-menu">' +
+            '<button class="km-item" onclick="editComment(\'' + c.id + '\')">Edit</button>' +
+            '<button class="km-item del" onclick="deleteComment(\'' + c.id + '\')">Delete</button>' +
+          '</div>' +
         '</div>';
       });
       el.innerHTML = '<div class="comments-list">' + html + '</div>';
-      // Scroll to bottom
       var scroll = document.getElementById('detailScroll');
       scroll.scrollTop = scroll.scrollHeight;
     }).catch(function() {
       document.getElementById('commentsList').innerHTML = '<div class="no-comments">Could not load comments</div>';
+    });
+  }
+
+  function toggleCommentKebab(btn) {
+    var menu = btn.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.comment-kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    if (!isOpen) menu.classList.add('open');
+  }
+
+  function editComment(cid) {
+    document.querySelectorAll('.comment-kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var el = document.querySelector('[data-cid="' + cid + '"]');
+    if (!el) return;
+    var bodyEl = el.querySelector('.comment-body');
+    var original = bodyEl.textContent;
+    var ta = document.createElement('textarea');
+    ta.className = 'comment-edit-ta';
+    ta.value = original;
+    ta.rows = Math.max(2, original.split('\n').length);
+    bodyEl.style.display = 'none';
+    bodyEl.parentNode.insertBefore(ta, bodyEl.nextSibling);
+    ta.focus();
+    ta.selectionStart = ta.value.length;
+
+    var saved = false;
+    function save() {
+      if (saved) return;
+      saved = true;
+      var newBody = ta.value.trim();
+      if (!newBody || newBody === original) {
+        ta.remove();
+        bodyEl.style.display = '';
+        return;
+      }
+      bodyEl.innerHTML = linkify(newBody);
+      bodyEl.style.display = '';
+      ta.remove();
+      // Update latest comment cache
+      if (latestComments[activeTaskId] && latestComments[activeTaskId].body === original) {
+        latestComments[activeTaskId].body = newBody;
+        renderFeed(); renderPinView();
+      }
+      api('/api/comments?id=' + cid, {
+        method: 'PATCH', body: JSON.stringify({ body: newBody })
+      }).catch(function() {
+        showToast('Error saving comment');
+        bodyEl.innerHTML = linkify(original);
+      });
+    }
+    ta.addEventListener('blur', save);
+    ta.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.blur(); }
+      if (e.key === 'Escape') { saved = true; ta.remove(); bodyEl.style.display = ''; }
+    });
+  }
+
+  function deleteComment(cid) {
+    document.querySelectorAll('.comment-kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var el = document.querySelector('[data-cid="' + cid + '"]');
+    if (el) el.remove();
+    api('/api/comments?id=' + cid, { method: 'DELETE' }).then(function() {
+      // Refresh comment flags and preview
+      loadCommentFlags().then(function() {
+        tasks.forEach(function(t) { t.has_comments = !!commentedIds[t.id]; });
+        renderFeed(); renderPinView();
+      });
+    }).catch(function() {
+      showToast('Error deleting comment');
+      if (activeTaskId) loadComments(activeTaskId);
     });
   }
 
