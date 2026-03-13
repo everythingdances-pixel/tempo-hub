@@ -1073,9 +1073,9 @@
       if (a.sort_order == null) return -1;
       return 1;
     };
-    var urgent = tasks.filter(function(t) { return !t.done && t.urgent; }).sort(sortFn);
-    var active = tasks.filter(function(t) { return !t.done && !t.urgent; }).sort(sortFn);
-    var done = tasks.filter(function(t) { return t.done; }).sort(sortFn);
+    var urgent = tasks.filter(function(t) { return !t.done && t.urgent && !t.pinned; }).sort(sortFn);
+    var active = tasks.filter(function(t) { return !t.done && !t.urgent && !t.pinned; }).sort(sortFn);
+    var done = tasks.filter(function(t) { return t.done && !t.pinned; }).sort(sortFn);
 
     var html = '';
     if (urgent.length) {
