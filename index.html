@@ -382,6 +382,12 @@
   }
   .item-text.struck { text-decoration: line-through; color: #777; }
 
+  .auto-link {
+    color: #2563eb; text-decoration: underline;
+    word-break: break-all;
+  }
+  .auto-link:hover { color: var(--ink); }
+
   .item-time {
     display: block;
     font-size: 10px; font-weight: 400; color: var(--ghost);
@@ -1119,7 +1125,7 @@
         '<div class="pin-marker">📌</div>' +
         '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
           thumb +
-          '<div class="item-text">' + esc(t.body) + '</div>' +
+          '<div class="item-text">' + linkify(t.body) + '</div>' +
           '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + ts + '</span>' +
           '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
           '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
@@ -1140,7 +1146,7 @@
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
-        '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
+        '<div class="item-text' + strCls + '">' + linkify(t.body) + '</div>' +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
@@ -1157,6 +1163,11 @@
   function esc(s) {
     if (!s) return '';
     var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  }
+
+  function linkify(s) {
+    var safe = esc(s);
+    return safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="auto-link" onclick="event.stopPropagation()">$1</a>');
   }
 
   function timeAgo(d) {
@@ -1923,7 +1934,7 @@
     scroll.innerHTML =
       '<div class="detail-task' + (t.urgent ? ' urg' : '') + '">' +
         thumbHtml +
-        '<div class="detail-task-body">' + esc(t.body) + '</div>' +
+        '<div class="detail-task-body">' + linkify(t.body) + '</div>' +
         '<div class="detail-task-meta">' +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
           '<span class="detail-task-time">' + timeAgo(t.created_at) + (t.created_by ? ' · ' + esc(t.created_by) : '') + '</span>' +
@@ -1958,7 +1969,7 @@
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
         html += '<div class="comment">' +
           '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
-          '<div class="comment-body">' + esc(c.body) + '</div>' +
+          '<div class="comment-body">' + linkify(c.body) + '</div>' +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
         '</div>';
       });
@@ -1992,7 +2003,7 @@
     list.insertAdjacentHTML('beforeend',
       '<div class="comment">' +
         '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
-        '<div class="comment-body">' + esc(body) + '</div>' +
+        '<div class="comment-body">' + linkify(body) + '</div>' +
         '<div class="comment-time">Just now</div>' +
       '</div>');
     var scroll = document.getElementById('detailScroll');
