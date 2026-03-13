@@ -770,6 +770,7 @@
     padding: 14px 16px;
     background: #f7f7f7; border-left: 4px solid var(--ink);
     border-radius: var(--radius);
+    position: relative;
   }
   .detail-task.commented { border-left-color: #2563eb; }
   .detail-task.urg { border-left-color: var(--red); }
@@ -2258,6 +2259,8 @@
       thumbHtml = '<img class="detail-task-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
     }
     var detailFileHtml = fileChipHtml(t.file_url, t.file_name);
+    var urgLabel = t.urgent ? 'Unmark urgent' : 'Mark urgent';
+    var urgItemCls = t.urgent ? 'km-item urg-on' : 'km-item';
 
     scroll.innerHTML =
       '<div class="detail-task' + (t.has_comments ? ' commented' : '') + (t.urgent ? ' urg' : '') + '">' +
@@ -2267,6 +2270,13 @@
         '<div class="detail-task-meta">' +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
           '<span class="detail-task-time">' + timeAgo(t.created_at) + (t.created_by ? ' · ' + esc(t.created_by) : '') + '</span>' +
+        '</div>' +
+        '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
+        '<div class="kebab-menu">' +
+          '<button class="km-item" onclick="event.stopPropagation();editItem(\'' + t.id + '\')">Edit</button>' +
+          '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',true)">Pin</button>' +
+          '<button class="' + urgItemCls + '" onclick="event.stopPropagation();toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
+          '<button class="km-item del" onclick="event.stopPropagation();deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
       '</div>' +
       '<div class="comments-lbl">Comments</div>' +
