@@ -432,22 +432,6 @@
     vertical-align: -2px;
   }
   /* Bold button */
-  .format-bar {
-    display: flex; gap: 4px; margin-top: 4px;
-  }
-  .bold-btn {
-    width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; cursor: pointer;
-    font-size: 13px; color: var(--sub);
-    transition: background 0.15s, color 0.15s;
-  }
-  .bold-btn:hover { background: var(--surface-dk); color: var(--ink); }
-  .comment-bold-btn {
-    width: 24px; height: 24px; font-size: 12px;
-    flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
-  }
   /* Comment mic/dictation button */
   .comment-mic-btn {
     background: none; border: none; cursor: pointer;
@@ -760,15 +744,15 @@
     background: var(--bg);
   }
   .detail-back {
-    height: 44px; padding: 0 16px; border-radius: 22px;
+    height: 28px; padding: 0 10px; border-radius: 14px;
     background: var(--ink); border: none;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 2px;
     cursor: pointer; transition: background 0.15s; flex-shrink: 0;
   }
   .detail-back:hover { background: #333; }
-  .detail-back svg { width: 18px; height: 18px; stroke: #fff; flex-shrink: 0; }
+  .detail-back svg { width: 12px; height: 12px; stroke: #fff; flex-shrink: 0; }
   .back-label {
-    font-size: 13px; font-weight: 600; color: #fff;
+    font-size: 11px; font-weight: 600; color: #fff;
     letter-spacing: 0.02em;
   }
   .detail-title {
@@ -956,7 +940,6 @@
         <!-- Type -->
         <div class="panel on" id="pType">
           <textarea class="task-ta" id="taskTa" placeholder="What needs doing? (Shift+Enter for new line)"></textarea>
-          <div class="format-bar"><button class="bold-btn" onclick="toggleBold('taskTa')" title="Bold selected text"><b>B</b></button></div>
         </div>
 
         <!-- Voice -->
@@ -2638,27 +2621,6 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCapture(); }
   });
 
-  /* ── Bold selected text ── */
-  function toggleBold(taId) {
-    var ta = document.getElementById(taId);
-    if (!ta) return;
-    var start = ta.selectionStart;
-    var end = ta.selectionEnd;
-    if (start === end) return; // nothing selected
-    var val = ta.value;
-    var sel = val.slice(start, end);
-    // Toggle: if already wrapped in **, remove them
-    if (val.slice(start - 2, start) === '**' && val.slice(end, end + 2) === '**') {
-      ta.value = val.slice(0, start - 2) + sel + val.slice(end + 2);
-      ta.selectionStart = start - 2;
-      ta.selectionEnd = end - 2;
-    } else {
-      ta.value = val.slice(0, start) + '**' + sel + '**' + val.slice(end);
-      ta.selectionStart = start + 2;
-      ta.selectionEnd = end + 2;
-    }
-    ta.focus();
-  }
 
   /* ── Init + polling ── */
   goView('feed');
