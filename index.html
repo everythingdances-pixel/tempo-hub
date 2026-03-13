@@ -2636,6 +2636,11 @@
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) loadTasks();
   });
+
+  // Register service worker for PWA installability
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function() {});
+  }
 </script>
 </body>
 </html>
