@@ -741,16 +741,15 @@
     background: var(--bg);
   }
   .detail-back {
-    height: 28px; padding: 0 10px; border-radius: 14px;
-    background: var(--ink); border: none;
-    display: flex; align-items: center; justify-content: center; gap: 2px;
-    cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    background: none; border: none; padding: 0;
+    display: flex; align-items: center; gap: 3px;
+    cursor: pointer; color: var(--ghost);
+    transition: color 0.15s;
   }
-  .detail-back:hover { background: #333; }
-  .detail-back svg { width: 12px; height: 12px; stroke: #fff; flex-shrink: 0; }
+  .detail-back:hover { color: var(--ink); }
+  .detail-back svg { width: 14px; height: 14px; stroke: currentColor; flex-shrink: 0; }
   .back-label {
-    font-size: 11px; font-weight: 600; color: #fff;
-    letter-spacing: 0.02em;
+    font-size: 12px; font-weight: 500; color: inherit;
   }
   .detail-title {
     font-size: 11px; font-weight: 700; color: var(--ink);
