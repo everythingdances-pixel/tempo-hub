@@ -2384,10 +2384,11 @@
   }
 
   function postComment() {
-    if (!activeTaskId) return;
+    if (!activeTaskId) { console.warn('postComment: no activeTaskId'); return; }
     var ta = document.getElementById('commentTa');
+    if (!ta) { console.warn('postComment: no textarea'); return; }
     var body = ta.value.trim();
-    if (!body && !commentFileUrl) return;
+    if (!body && !commentFileUrl) { console.warn('postComment: empty body'); return; }
     if (!body) body = '(file attached)';
     ta.value = '';
 
