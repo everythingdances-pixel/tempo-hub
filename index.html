@@ -388,6 +388,59 @@
   }
   .auto-link:hover { color: var(--ink); }
 
+  /* File attachment UI */
+  .attach-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 10px;
+  }
+  .attach-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface); border: 1.5px dashed var(--border);
+    border-radius: var(--radius); padding: 8px 14px;
+    font-size: 12px; color: var(--sub); cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .attach-btn:hover { background: var(--surface-dk); border-color: var(--ghost); }
+  .attach-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .file-preview {
+    display: flex; align-items: center; gap: 6px;
+    background: #f0f4ff; border: 1px solid #d0d9f0;
+    border-radius: var(--radius); padding: 6px 10px;
+    font-size: 11px; color: var(--ink); max-width: 100%;
+  }
+  .file-preview-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .file-preview-remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--ghost); font-size: 14px; line-height: 1; padding: 0 2px;
+  }
+  .file-preview-remove:hover { color: var(--red); }
+  .file-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f0f4ff; border: 1px solid #d0d9f0;
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 11px; color: #2563eb; margin-top: 6px;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .file-chip:hover { background: #e0ebff; }
+  /* Comment attach button — small inline */
+  .comment-attach-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--ghost); padding: 4px; display: flex; align-items: center;
+    transition: color 0.15s;
+  }
+  .comment-attach-btn:hover { color: var(--ink); }
+  .comment-attach-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .comment-file-preview {
+    display: flex; align-items: center; gap: 6px;
+    background: #f0f4ff; border: 1px solid #d0d9f0;
+    border-radius: 8px; padding: 4px 8px; margin-bottom: 6px;
+    font-size: 10px; color: var(--ink);
+  }
+  .comment-file-preview .file-preview-name { font-size: 10px; }
+
   /* Comment preview on feed card */
   .item-comment-preview {
     margin-top: 6px; padding: 8px 10px;
@@ -761,9 +814,12 @@
   }
 
   .detail-input {
-    display: flex; gap: 8px; padding: 12px 20px 28px;
+    display: flex; flex-direction: column; gap: 4px; padding: 12px 20px 28px;
     border-top: 1px solid var(--border); flex-shrink: 0;
     background: var(--bg);
+  }
+  .detail-input-wrap {
+    display: flex; align-items: flex-end; gap: 8px; width: 100%;
   }
   .detail-ta {
     flex: 1; min-height: 36px; max-height: 80px;
@@ -904,6 +960,20 @@
 
       </div><!-- /input-card -->
 
+      <!-- File attachment -->
+      <div class="attach-row" id="captureAttachRow">
+        <button class="attach-btn" onclick="document.getElementById('captureFileInput').click()">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          Attach file
+        </button>
+      </div>
+      <div class="file-preview" id="captureFilePreview" style="display:none;margin-top:8px;">
+        <span>📎</span>
+        <span class="file-preview-name" id="captureFileName"></span>
+        <button class="file-preview-remove" onclick="removeCaptureFile()">✕</button>
+      </div>
+      <input type="file" id="captureFileInput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip,.jpg,.jpeg,.png,.gif,.webp" onchange="handleCaptureFile(event)">
+
       <button class="send-btn" onclick="sendCapture()">Send to feed</button>
 
     </div>
@@ -939,10 +1009,21 @@
     </div>
     <div class="detail-scroll" id="detailScroll"></div>
     <div class="detail-input">
-      <textarea class="detail-ta" id="commentTa" placeholder="Add a comment…" rows="1"></textarea>
-      <button class="detail-send" onclick="postComment()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
+      <div class="comment-file-preview" id="commentFilePreview" style="display:none;">
+        <span>📎</span>
+        <span class="file-preview-name" id="commentFileName"></span>
+        <button class="file-preview-remove" onclick="removeCommentFile()">✕</button>
+      </div>
+      <div class="detail-input-wrap">
+        <button class="comment-attach-btn" onclick="document.getElementById('commentFileInput').click()">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <textarea class="detail-ta" id="commentTa" placeholder="Add a comment…" rows="1"></textarea>
+        <button class="detail-send" onclick="postComment()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <input type="file" id="commentFileInput" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip,.jpg,.jpeg,.png,.gif,.webp" onchange="handleCommentFile(event)">
     </div>
   </div>
 
@@ -1164,6 +1245,9 @@
     var commentCls = t.has_comments ? ' commented' : '';
     var pinnedCls = t.pinned ? ' pinned' : '';
 
+    // File attachment chip
+    var fileHtml = fileChipHtml(t.file_url, t.file_name);
+
     // Latest comment preview
     var previewHtml = '';
     var lc = latestComments[t.id];
@@ -1181,6 +1265,7 @@
         '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
           thumb +
           '<div class="item-text">' + linkify(t.body) + '</div>' +
+          fileHtml +
           '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + ts + '</span>' +
           previewHtml +
           '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
@@ -1203,6 +1288,7 @@
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
         '<div class="item-text' + strCls + '">' + linkify(t.body) + '</div>' +
+        fileHtml +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         previewHtml +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
@@ -1250,6 +1336,84 @@
       .catch(function(err) { console.error('Upload error:', err); return null; });
   }
 
+  /* ── File attachment helpers ── */
+  var captureFileUrl = null;
+  var captureFileName = null;
+  var commentFileUrl = null;
+  var commentFileName = null;
+
+  function uploadFile(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function() {
+        var base64 = reader.result.split(',')[1];
+        api('/api/upload', {
+          method: 'POST',
+          body: JSON.stringify({ contentType: file.type || 'application/octet-stream', base64: base64, originalName: file.name })
+        }).then(function(r) { resolve(r.url); })
+          .catch(reject);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleCaptureFile(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    document.getElementById('captureFileName').textContent = file.name;
+    document.getElementById('captureFilePreview').style.display = 'flex';
+    document.querySelector('.attach-btn').style.display = 'none';
+    showToast('Uploading…');
+    uploadFile(file).then(function(url) {
+      captureFileUrl = url;
+      captureFileName = file.name;
+      showToast('File attached');
+    }).catch(function(err) {
+      console.error('File upload error:', err);
+      showToast('Upload failed');
+      removeCaptureFile();
+    });
+  }
+
+  function removeCaptureFile() {
+    captureFileUrl = null;
+    captureFileName = null;
+    document.getElementById('captureFilePreview').style.display = 'none';
+    document.querySelector('.attach-btn').style.display = 'inline-flex';
+    document.getElementById('captureFileInput').value = '';
+  }
+
+  function handleCommentFile(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    document.getElementById('commentFileName').textContent = file.name;
+    document.getElementById('commentFilePreview').style.display = 'flex';
+    showToast('Uploading…');
+    uploadFile(file).then(function(url) {
+      commentFileUrl = url;
+      commentFileName = file.name;
+      showToast('File attached');
+    }).catch(function(err) {
+      console.error('File upload error:', err);
+      showToast('Upload failed');
+      removeCommentFile();
+    });
+  }
+
+  function removeCommentFile() {
+    commentFileUrl = null;
+    commentFileName = null;
+    document.getElementById('commentFilePreview').style.display = 'none';
+    document.getElementById('commentFileInput').value = '';
+  }
+
+  function fileChipHtml(fileUrl, fileName) {
+    if (!fileUrl) return '';
+    var name = fileName || 'attachment';
+    return '<a class="file-chip" href="' + esc(fileUrl) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 ' + esc(name) + '</a>';
+  }
+
   /* ── Capture flow — uploads image, saves to Supabase ── */
   function sendCapture() {
     var rawInput = '';
@@ -1285,6 +1449,7 @@
         created_by: curAssignee
       };
       if (imageUrl) task.image_url = imageUrl;
+      if (captureFileUrl) { task.file_url = captureFileUrl; task.file_name = captureFileName; }
       return api('/api/tasks', { method: 'POST', body: JSON.stringify(task) });
     }).then(function() {
       resetCapture();
@@ -1317,6 +1482,7 @@
     });
     document.getElementById('camCtx').value = '';
     document.getElementById('galCtx').value = '';
+    removeCaptureFile();
   }
 
   /* ── Copy task text ── */
@@ -1987,11 +2153,13 @@
     if (t.image_url) {
       thumbHtml = '<img class="detail-task-thumb" src="' + esc(t.image_url) + '" alt="" onclick="openLightbox(this)">';
     }
+    var detailFileHtml = fileChipHtml(t.file_url, t.file_name);
 
     scroll.innerHTML =
       '<div class="detail-task' + (t.urgent ? ' urg' : '') + '">' +
         thumbHtml +
         '<div class="detail-task-body">' + linkify(t.body) + '</div>' +
+        detailFileHtml +
         '<div class="detail-task-meta">' +
           (t.type && t.type !== 'task' ? '<span class="tag">' + esc(t.type) + '</span>' : '') +
           '<span class="detail-task-time">' + timeAgo(t.created_at) + (t.created_by ? ' · ' + esc(t.created_by) : '') + '</span>' +
@@ -2024,9 +2192,11 @@
       var html = '';
       comments.forEach(function(c) {
         var cInit = c.created_by ? c.created_by.charAt(0).toUpperCase() : '?';
+        var cFile = fileChipHtml(c.file_url, c.file_name);
         html += '<div class="comment" data-cid="' + c.id + '">' +
           '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
           '<div class="comment-body">' + linkify(c.body) + '</div>' +
+          cFile +
           '<div class="comment-time">' + timeAgo(c.created_at) + '</div>' +
           '<button class="comment-kebab" onclick="toggleCommentKebab(this)">⋯</button>' +
           '<div class="comment-kebab-menu">' +
@@ -2117,8 +2287,13 @@
     if (!activeTaskId) return;
     var ta = document.getElementById('commentTa');
     var body = ta.value.trim();
-    if (!body) return;
+    if (!body && !commentFileUrl) return;
+    if (!body) body = '(file attached)';
     ta.value = '';
+
+    var fUrl = commentFileUrl;
+    var fName = commentFileName;
+    removeCommentFile();
 
     // Optimistic: mark task as commented for blue border + update preview
     commentedIds[activeTaskId] = true;
@@ -2133,23 +2308,27 @@
     if (noComments) el.innerHTML = '<div class="comments-list"></div>';
     var list = el.querySelector('.comments-list') || el;
     var cInit = curAssignee ? curAssignee.charAt(0).toUpperCase() : '?';
+    var cFileHtml = fileChipHtml(fUrl, fName);
     list.insertAdjacentHTML('beforeend',
       '<div class="comment">' +
         '<div class="comment-by"><span class="avatar-xs">' + cInit + '</span></div>' +
         '<div class="comment-body">' + linkify(body) + '</div>' +
+        cFileHtml +
         '<div class="comment-time">Just now</div>' +
       '</div>');
     var scroll = document.getElementById('detailScroll');
     scroll.scrollTop = scroll.scrollHeight;
 
     // Persist in background
+    var commentData = {
+      task_id: activeTaskId,
+      body: body,
+      created_by: curAssignee
+    };
+    if (fUrl) { commentData.file_url = fUrl; commentData.file_name = fName; }
     api('/api/comments', {
       method: 'POST',
-      body: JSON.stringify({
-        task_id: activeTaskId,
-        body: body,
-        created_by: curAssignee
-      })
+      body: JSON.stringify(commentData)
     }).catch(function() {
       showToast('Error posting comment');
       loadComments(activeTaskId);

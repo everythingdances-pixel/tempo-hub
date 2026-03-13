@@ -1,9 +1,36 @@
-// /api/upload.js — Uploads images to Supabase Storage (captures bucket)
-// Accepts base64 image data, stores in Supabase, returns public URL.
+// /api/upload.js — Uploads files to Supabase Storage (captures bucket)
+// Accepts base64 data + contentType, stores in Supabase, returns public URL.
 
 export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } }
 };
+
+// Map MIME types to proper extensions for non-obvious types
+const MIME_EXT = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'text/plain': 'txt',
+  'text/csv': 'csv',
+};
+
+function getExtension(contentType, originalName) {
+  // Prefer extension from original filename if provided
+  if (originalName) {
+    const dotIdx = originalName.lastIndexOf('.');
+    if (dotIdx > 0) return originalName.slice(dotIdx + 1).toLowerCase();
+  }
+  // Check known MIME map
+  if (MIME_EXT[contentType]) return MIME_EXT[contentType];
+  // Fallback: second part of MIME (works for image/jpeg, image/png, application/pdf)
+  const sub = contentType.split('/')[1];
+  if (sub && sub.length < 10) return sub;
+  return 'bin';
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,14 +44,14 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not configured' });
   }
 
-  const { base64, contentType } = req.body;
+  const { base64, contentType, originalName } = req.body;
 
   if (!base64 || !contentType) {
     return res.status(400).json({ error: 'Missing base64 or contentType' });
   }
 
-  // Generate unique filename
-  const ext = contentType.split('/')[1] || 'jpg';
+  // Generate unique filename with proper extension
+  const ext = getExtension(contentType, originalName);
   const filename = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
   const path = 'captures/' + filename;
 
