@@ -2332,12 +2332,16 @@
       created_by: curAssignee
     };
     if (fUrl) { commentData.file_url = fUrl; commentData.file_name = fName; }
+    var tid = activeTaskId;
     api('/api/comments', {
       method: 'POST',
       body: JSON.stringify(commentData)
+    }).then(function() {
+      // Reload to get full comment HTML with kebab menus
+      if (activeTaskId === tid) loadComments(tid);
     }).catch(function() {
       showToast('Error posting comment');
-      loadComments(activeTaskId);
+      if (activeTaskId === tid) loadComments(tid);
     });
   }
 
