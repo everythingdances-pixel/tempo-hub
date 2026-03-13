@@ -1672,22 +1672,28 @@
   document.getElementById('theList').addEventListener('scroll', function() {
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
   });
+  document.getElementById('pinList').addEventListener('scroll', function() {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  });
 
   /* ── Drag-to-reorder (touch + mouse) ── */
   var dragState = null;
 
   function initDrag() {
-    var list = document.getElementById('theList');
-    // Touch: hold-to-drag (avoids scroll conflict)
-    list.addEventListener('touchstart', dragStart, { passive: false });
-    document.addEventListener('touchmove', dragMove, { passive: false });
-    document.addEventListener('touchend', dragEnd);
-    // Mouse: drag on movement (no hold delay needed)
-    list.addEventListener('mousedown', function(e) {
+    var lists = [document.getElementById('theList'), document.getElementById('pinList')];
+    function mouseDownHandler(e) {
       if (e.button !== 0) return;
       e.preventDefault();
       dragStart({ target: e.target, touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){}, _mouse: true });
+    }
+    lists.forEach(function(list) {
+      // Touch: hold-to-drag (avoids scroll conflict)
+      list.addEventListener('touchstart', dragStart, { passive: false });
+      // Mouse: drag on movement (no hold delay needed)
+      list.addEventListener('mousedown', mouseDownHandler);
     });
+    document.addEventListener('touchmove', dragMove, { passive: false });
+    document.addEventListener('touchend', dragEnd);
     document.addEventListener('mousemove', function(e) {
       if (dragState) dragMove({ touches: [{ clientX: e.clientX, clientY: e.clientY }], preventDefault: function(){} });
     });
@@ -1847,14 +1853,15 @@
     var destTask = tasks.find(function(t) { return t.id === destId; });
     if (!srcTask || !destTask) return;
 
-    var srcSection = srcTask.done ? 'done' : (srcTask.urgent ? 'urgent' : 'active');
-    var destSection = destTask.done ? 'done' : (destTask.urgent ? 'urgent' : 'active');
+    var srcSection = srcTask.pinned ? 'pinned' : (srcTask.done ? 'done' : (srcTask.urgent ? 'urgent' : 'active'));
+    var destSection = destTask.pinned ? 'pinned' : (destTask.done ? 'done' : (destTask.urgent ? 'urgent' : 'active'));
     if (srcSection !== destSection) { showToast('Drag within same section'); return; }
 
     var sectionTasks = tasks.filter(function(t) {
-      if (srcSection === 'done') return t.done;
-      if (srcSection === 'urgent') return !t.done && t.urgent;
-      return !t.done && !t.urgent;
+      if (srcSection === 'pinned') return t.pinned;
+      if (srcSection === 'done') return t.done && !t.pinned;
+      if (srcSection === 'urgent') return !t.done && t.urgent && !t.pinned;
+      return !t.done && !t.urgent && !t.pinned;
     });
 
     var srcIdx = sectionTasks.indexOf(srcTask);
@@ -1868,6 +1875,7 @@
 
     sectionTasks.forEach(function(t, i) { t.sort_order = i; });
     renderFeed();
+    renderPinView();
 
     // Persist
     sectionTasks.forEach(function(t) {
