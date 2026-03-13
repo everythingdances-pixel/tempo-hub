@@ -431,6 +431,23 @@
     stroke: currentColor; fill: none; stroke-width: 2;
     vertical-align: -2px;
   }
+  /* Bold button */
+  .format-bar {
+    display: flex; gap: 4px; margin-top: 4px;
+  }
+  .bold-btn {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: var(--sub);
+    transition: background 0.15s, color 0.15s;
+  }
+  .bold-btn:hover { background: var(--surface-dk); color: var(--ink); }
+  .comment-bold-btn {
+    width: 24px; height: 24px; font-size: 12px;
+    flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
+  }
   /* Comment attach button — small inline */
   .comment-attach-btn {
     background: none; border: none; cursor: pointer;
@@ -922,6 +939,7 @@
         <!-- Type -->
         <div class="panel on" id="pType">
           <textarea class="task-ta" id="taskTa" placeholder="What needs doing? (Shift+Enter for new line)"></textarea>
+          <div class="format-bar"><button class="bold-btn" onclick="toggleBold('taskTa')" title="Bold selected text"><b>B</b></button></div>
         </div>
 
         <!-- Voice -->
@@ -1025,6 +1043,7 @@
         <button class="comment-attach-btn" onclick="document.getElementById('commentFileInput').click()">
           <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
+        <button class="bold-btn comment-bold-btn" onclick="toggleBold('commentTa')" title="Bold selected text"><b>B</b></button>
         <textarea class="detail-ta" id="commentTa" placeholder="Add a comment… (Shift+Enter for new line)" rows="1"></textarea>
         <button class="detail-send" onclick="postComment()">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -2359,31 +2378,27 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCapture(); }
   });
 
-  /* ── Ctrl+B to bold selected text ── */
-  function handleBold(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      var ta = e.target;
-      var start = ta.selectionStart;
-      var end = ta.selectionEnd;
-      if (start === end) return; // nothing selected
-      var val = ta.value;
-      var sel = val.slice(start, end);
-      // Toggle: if already wrapped in **, remove them
-      if (val.slice(start - 2, start) === '**' && val.slice(end, end + 2) === '**') {
-        ta.value = val.slice(0, start - 2) + sel + val.slice(end + 2);
-        ta.selectionStart = start - 2;
-        ta.selectionEnd = end - 2;
-      } else {
-        ta.value = val.slice(0, start) + '**' + sel + '**' + val.slice(end);
-        ta.selectionStart = start + 2;
-        ta.selectionEnd = end + 2;
-      }
+  /* ── Bold selected text ── */
+  function toggleBold(taId) {
+    var ta = document.getElementById(taId);
+    if (!ta) return;
+    var start = ta.selectionStart;
+    var end = ta.selectionEnd;
+    if (start === end) return; // nothing selected
+    var val = ta.value;
+    var sel = val.slice(start, end);
+    // Toggle: if already wrapped in **, remove them
+    if (val.slice(start - 2, start) === '**' && val.slice(end, end + 2) === '**') {
+      ta.value = val.slice(0, start - 2) + sel + val.slice(end + 2);
+      ta.selectionStart = start - 2;
+      ta.selectionEnd = end - 2;
+    } else {
+      ta.value = val.slice(0, start) + '**' + sel + '**' + val.slice(end);
+      ta.selectionStart = start + 2;
+      ta.selectionEnd = end + 2;
     }
+    ta.focus();
   }
-  document.getElementById('taskTa').addEventListener('keydown', handleBold);
-  document.getElementById('commentTa').addEventListener('keydown', handleBold);
-  document.getElementById('voiceTa') && document.getElementById('voiceTa').addEventListener('keydown', handleBold);
 
   /* ── Init + polling ── */
   goView('feed');
