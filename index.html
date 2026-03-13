@@ -1318,6 +1318,7 @@
   function linkify(s) {
     var safe = esc(s);
     safe = safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="auto-link" onclick="event.stopPropagation()">$1</a>');
+    safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     safe = safe.replace(/\n/g, '<br>');
     return safe;
   }
@@ -2357,6 +2358,32 @@
   document.getElementById('taskTa').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCapture(); }
   });
+
+  /* ── Ctrl+B to bold selected text ── */
+  function handleBold(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      var ta = e.target;
+      var start = ta.selectionStart;
+      var end = ta.selectionEnd;
+      if (start === end) return; // nothing selected
+      var val = ta.value;
+      var sel = val.slice(start, end);
+      // Toggle: if already wrapped in **, remove them
+      if (val.slice(start - 2, start) === '**' && val.slice(end, end + 2) === '**') {
+        ta.value = val.slice(0, start - 2) + sel + val.slice(end + 2);
+        ta.selectionStart = start - 2;
+        ta.selectionEnd = end - 2;
+      } else {
+        ta.value = val.slice(0, start) + '**' + sel + '**' + val.slice(end);
+        ta.selectionStart = start + 2;
+        ta.selectionEnd = end + 2;
+      }
+    }
+  }
+  document.getElementById('taskTa').addEventListener('keydown', handleBold);
+  document.getElementById('commentTa').addEventListener('keydown', handleBold);
+  document.getElementById('voiceTa') && document.getElementById('voiceTa').addEventListener('keydown', handleBold);
 
   /* ── Init + polling ── */
   goView('feed');
