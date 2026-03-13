@@ -454,6 +454,7 @@
     font-size: 11px; line-height: 1.5; color: var(--sub);
     overflow: hidden;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    max-width: 80%;
   }
   .item-comment-preview .preview-by {
     font-weight: 700; color: var(--ink); margin-right: 4px;
@@ -526,7 +527,7 @@
   /* Image thumbnail in feed card */
   .item-thumb {
     max-width: 80%; aspect-ratio: 16/9;
-    object-fit: cover; border-radius: 4px;
+    object-fit: cover; border-radius: var(--radius);
     margin-bottom: 6px; cursor: pointer;
     display: block;
     transition: opacity 0.15s;
@@ -1268,8 +1269,8 @@
       return '<div class="item' + commentCls + ' pinned" data-id="' + t.id + '">' +
         '<div class="pin-marker">📌</div>' +
         '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
-          thumb +
           '<div class="item-text">' + linkify(t.body) + '</div>' +
+          thumb +
           fileHtml +
           '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + ts + '</span>' +
           previewHtml +
@@ -1291,8 +1292,8 @@
     return '<div class="item' + urgCls + doneCls + commentCls + '" data-id="' + t.id + '">' +
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
-        thumb +
         '<div class="item-text' + strCls + '">' + linkify(t.body) + '</div>' +
+        thumb +
         fileHtml +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         previewHtml +
