@@ -1167,9 +1167,9 @@
     var previewHtml = '';
     var lc = latestComments[t.id];
     if (lc) {
-      var lcName = lc.created_by ? lc.created_by.charAt(0).toUpperCase() + lc.created_by.slice(1) : '';
+      var lcInit = lc.created_by ? lc.created_by.charAt(0).toUpperCase() : '';
       previewHtml = '<div class="item-comment-preview">' +
-        (lcName ? '<span class="preview-by">' + esc(lcName) + ':</span>' : '') +
+        (lcInit ? '<span class="avatar-xs" style="margin-right:6px;">' + lcInit + '</span>' : '') +
         linkify(lc.body) + '</div>';
     }
 
