@@ -61,7 +61,7 @@
     .hdr { padding: 0 20px 0; }
     .wordmark-sub { margin-top: 4px; }
     .tabs { padding: 7px 20px 0; }
-    .detail-hdr { padding-top: calc(6px + env(safe-area-inset-top, 0px)); }
+    .detail-hdr { padding-top: max(16px, env(safe-area-inset-top, 16px)); }
     .fab { bottom: 90px; right: 20px; width: 56px; height: 56px; }
     .list { padding-bottom: 90px; }
     .detail-input { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
@@ -760,13 +760,17 @@
     background: var(--bg);
   }
   .detail-back {
-    width: 40px; height: 40px; border-radius: 50%;
+    height: 44px; padding: 0 16px; border-radius: 22px;
     background: var(--ink); border: none;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
     cursor: pointer; transition: background 0.15s; flex-shrink: 0;
   }
   .detail-back:hover { background: #333; }
-  .detail-back svg { width: 20px; height: 20px; stroke: #fff; }
+  .detail-back svg { width: 18px; height: 18px; stroke: #fff; flex-shrink: 0; }
+  .back-label {
+    font-size: 13px; font-weight: 600; color: #fff;
+    letter-spacing: 0.02em;
+  }
   .detail-title {
     font-size: 11px; font-weight: 700; color: var(--ink);
     text-transform: uppercase; letter-spacing: 0.06em;
@@ -1043,6 +1047,7 @@
     <div class="detail-hdr">
       <button class="detail-back" onclick="closeDetail()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        <span class="back-label">Back</span>
       </button>
     </div>
     <div class="detail-scroll" id="detailScroll"></div>
