@@ -1713,11 +1713,26 @@
   var audioChunks = [];
   var voiceTimerInterval = null;
   var voiceStartTime = 0;
+  var voiceStream = null;
+
+  /* Detect iOS (Safari or PWA) */
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   function formatTime(sec) {
     var m = Math.floor(sec / 60);
     var s = sec % 60;
     return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function cleanupVoice() {
+    if (voiceStream) {
+      voiceStream.getTracks().forEach(function(t) { t.stop(); });
+      voiceStream = null;
+    }
+    mediaRecorder = null;
+    audioChunks = [];
+    clearInterval(voiceTimerInterval);
   }
 
   function toggleVoice() {
@@ -1730,7 +1745,7 @@
     if (voiceOn) {
       voiceOn = false;
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
+        try { mediaRecorder.stop(); } catch(e) {}
       }
       btn.className = 'mic-btn';
       lbl.textContent = 'Transcribing…';
@@ -1757,41 +1772,95 @@
       timer.textContent = formatTime(elapsed);
     }, 1000);
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-      // Pick best supported format
-      var mimeType = 'audio/webm';
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
+    /* Audio constraints — iOS works better with specific sample rate */
+    var audioConstraints = isIOS
+      ? { audio: { echoCancellation: true, sampleRate: 44100 } }
+      : { audio: true };
+
+    navigator.mediaDevices.getUserMedia(audioConstraints).then(function(stream) {
+      voiceStream = stream;
+
+      /* Pick best supported format — prefer mp4 on iOS (native), webm/opus elsewhere */
+      var mimeType = '';
+      if (isIOS) {
+        /* iOS Safari only reliably supports audio/mp4 */
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+          mimeType = 'audio/aac';
+        }
+      } else {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        }
       }
 
-      mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, audioBitsPerSecond: 32000 });
+      /* Build recorder options — iOS chokes on low audioBitsPerSecond with mp4 encoder */
+      var recorderOpts = {};
+      if (mimeType) recorderOpts.mimeType = mimeType;
+      if (!isIOS) recorderOpts.audioBitsPerSecond = 32000;
+
+      try {
+        mediaRecorder = new MediaRecorder(stream, recorderOpts);
+      } catch(e) {
+        /* Fallback: let browser pick defaults */
+        console.warn('MediaRecorder init failed, using defaults:', e);
+        mediaRecorder = new MediaRecorder(stream);
+        mimeType = mediaRecorder.mimeType || 'audio/webm';
+      }
+
+      /* Track actual mimeType for transcription */
+      var actualMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
 
       mediaRecorder.ondataavailable = function(e) {
-        if (e.data.size > 0) audioChunks.push(e.data);
+        if (e.data && e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onerror = function(e) {
+        console.error('MediaRecorder error:', e);
+        voiceOn = false;
+        btn.className = 'mic-btn';
+        cleanupVoice();
+        timer.style.display = 'none';
+        lbl.textContent = 'Recording failed — tap to retry';
+        showToast('Recording error');
       };
 
       mediaRecorder.onstop = function() {
-        // Stop all tracks to release mic
-        stream.getTracks().forEach(function(t) { t.stop(); });
+        /* Release mic */
+        if (voiceStream) {
+          voiceStream.getTracks().forEach(function(t) { t.stop(); });
+          voiceStream = null;
+        }
         timer.style.display = 'none';
 
         if (!audioChunks.length) {
-          lbl.textContent = 'Tap to record';
+          lbl.textContent = 'No audio captured — tap to retry';
           return;
         }
 
-        var blob = new Blob(audioChunks, { type: mimeType });
-        transcribeAudio(blob, mimeType);
+        var blob = new Blob(audioChunks, { type: actualMime });
+        transcribeAudio(blob, actualMime);
       };
 
-      mediaRecorder.start(1000); // collect chunks every second
+      /*
+       * iOS Safari bug: start(timeslice) causes ondataavailable to fire
+       * unreliably or not at all. Use start() without timeslice on iOS —
+       * all data arrives in one chunk at onstop.
+       */
+      if (isIOS) {
+        mediaRecorder.start();
+      } else {
+        mediaRecorder.start(1000);
+      }
+
     }).catch(function(err) {
       voiceOn = false;
-      mediaRecorder = null;
-      audioChunks = [];
-      clearInterval(voiceTimerInterval);
+      cleanupVoice();
       timer.style.display = 'none';
       btn.className = 'mic-btn';
       if (err.name === 'NotAllowedError') {
@@ -1808,20 +1877,25 @@
     var res = document.getElementById('voiceRes');
     var ta = document.getElementById('voiceTa');
 
-    lbl.textContent = 'Transcribing…';
+    var sizeMB = (blob.size / 1024 / 1024).toFixed(1);
+    lbl.textContent = 'Transcribing (' + sizeMB + ' MB)…';
 
     // Convert blob to base64 and send to Whisper API
     var reader = new FileReader();
     reader.onloadend = function() {
       var base64 = reader.result.split(',')[1];
+      if (!base64) {
+        lbl.textContent = 'Error reading audio — tap to retry';
+        return;
+      }
 
       fetch('/api/whisper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base64: base64, mimeType: mimeType })
       }).then(function(r) {
-      return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; });
-    }).then(function(result) {
+        return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; });
+      }).then(function(result) {
         if (result.ok && result.data.text) {
           ta.value = result.data.text;
           res.style.display = 'flex';
@@ -1838,6 +1912,9 @@
         lbl.textContent = 'Error — tap to retry';
         showToast('Network error');
       });
+    };
+    reader.onerror = function() {
+      lbl.textContent = 'Error reading audio — tap to retry';
     };
     reader.readAsDataURL(blob);
   }
@@ -2379,27 +2456,40 @@
     });
   }
 
-  /* ── Comment dictation (Web Speech API) ── */
+  /* ── Comment dictation ── */
+  /* Uses Web Speech API on Android/desktop, MediaRecorder+Whisper on iOS */
   var commentRecognition = null;
   var commentDictating = false;
+  var commentMicRecorder = null;
+  var commentMicChunks = [];
+  var commentMicStream = null;
 
   function toggleCommentDictation() {
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      showToast('Speech recognition not supported');
-      return;
-    }
-
     var btn = document.getElementById('commentMicBtn');
     var ta = document.getElementById('commentTa');
 
-    if (commentDictating && commentRecognition) {
+    /* If already recording/dictating, stop */
+    if (commentDictating) {
       commentDictating = false;
-      commentRecognition.stop();
       btn.classList.remove('dictating');
+      if (commentRecognition) { commentRecognition.stop(); commentRecognition = null; }
+      if (commentMicRecorder && commentMicRecorder.state !== 'inactive') {
+        try { commentMicRecorder.stop(); } catch(e) {}
+      }
       return;
     }
 
+    /* Try Web Speech API first (works on Android Chrome, desktop browsers) */
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition && !isIOS) {
+      startWebSpeechDictation(btn, ta, SpeechRecognition);
+    } else {
+      /* iOS fallback: record audio → Whisper transcription */
+      startWhisperDictation(btn, ta);
+    }
+  }
+
+  function startWebSpeechDictation(btn, ta, SpeechRecognition) {
     commentRecognition = new SpeechRecognition();
     commentRecognition.continuous = true;
     commentRecognition.interimResults = true;
@@ -2433,7 +2523,6 @@
     };
 
     commentRecognition.onend = function() {
-      // Auto-restart if still in dictation mode (browser may stop after silence)
       if (commentDictating) {
         try { commentRecognition.start(); } catch(e) {}
       } else {
@@ -2442,6 +2531,101 @@
     };
 
     commentRecognition.start();
+  }
+
+  function startWhisperDictation(btn, ta) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Microphone not supported'); return;
+    }
+
+    commentDictating = true;
+    commentMicChunks = [];
+    btn.classList.add('dictating');
+    ta.placeholder = 'Recording… tap mic to stop & transcribe';
+
+    var audioConstraints = { audio: { echoCancellation: true, sampleRate: 44100 } };
+
+    navigator.mediaDevices.getUserMedia(audioConstraints).then(function(stream) {
+      commentMicStream = stream;
+
+      var mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+      else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+      else if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+
+      var opts = {};
+      if (mimeType) opts.mimeType = mimeType;
+
+      try {
+        commentMicRecorder = new MediaRecorder(stream, opts);
+      } catch(e) {
+        commentMicRecorder = new MediaRecorder(stream);
+      }
+
+      var actualMime = commentMicRecorder.mimeType || mimeType || 'audio/webm';
+
+      commentMicRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) commentMicChunks.push(e.data);
+      };
+
+      commentMicRecorder.onerror = function(e) {
+        console.error('Comment recorder error:', e);
+        commentDictating = false;
+        btn.classList.remove('dictating');
+        ta.placeholder = 'Add a comment… (Shift+Enter for new line)';
+        if (commentMicStream) { commentMicStream.getTracks().forEach(function(t) { t.stop(); }); commentMicStream = null; }
+        showToast('Recording error');
+      };
+
+      commentMicRecorder.onstop = function() {
+        if (commentMicStream) { commentMicStream.getTracks().forEach(function(t) { t.stop(); }); commentMicStream = null; }
+        ta.placeholder = 'Transcribing…';
+
+        if (!commentMicChunks.length) {
+          ta.placeholder = 'Add a comment… (Shift+Enter for new line)';
+          showToast('No audio captured');
+          return;
+        }
+
+        var blob = new Blob(commentMicChunks, { type: actualMime });
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          var base64 = reader.result.split(',')[1];
+          if (!base64) { ta.placeholder = 'Add a comment…'; showToast('Error reading audio'); return; }
+
+          fetch('/api/whisper', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64: base64, mimeType: actualMime })
+          }).then(function(r) {
+            return r.json().then(function(d) { return { ok: r.ok, data: d }; });
+          }).then(function(result) {
+            ta.placeholder = 'Add a comment… (Shift+Enter for new line)';
+            if (result.ok && result.data.text) {
+              ta.value = (ta.value ? ta.value + ' ' : '') + result.data.text;
+              ta.focus();
+            } else {
+              showToast(result.data.error || 'No speech detected');
+            }
+          }).catch(function() {
+            ta.placeholder = 'Add a comment… (Shift+Enter for new line)';
+            showToast('Transcription failed');
+          });
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      commentMicRecorder.start(); /* no timeslice — single chunk on stop */
+    }).catch(function(err) {
+      commentDictating = false;
+      btn.classList.remove('dictating');
+      ta.placeholder = 'Add a comment… (Shift+Enter for new line)';
+      if (err.name === 'NotAllowedError') {
+        showToast('Mic access denied');
+      } else {
+        showToast('Mic error: ' + err.message);
+      }
+    });
   }
 
   // Enter key to send comment
