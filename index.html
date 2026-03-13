@@ -526,6 +526,14 @@
 
   ::-webkit-scrollbar { width: 0; }
 
+  /* ── PIN INDICATOR on feed cards ── */
+  .pin-icon {
+    display: inline-block; width: 10px; height: 10px;
+    margin-right: 3px; vertical-align: middle; margin-top: -1px;
+    fill: none; stroke: var(--ghost); stroke-width: 2;
+  }
+  .item.pinned .pin-icon { stroke: var(--ink); }
+
   /* ── PIN SCREEN ── */
   .pin-screen {
     position: absolute; inset: 0;
@@ -774,6 +782,7 @@
   <div class="tabs">
     <div class="tab" id="tCapture" onclick="event.stopPropagation(); goView('capture')">Capture</div>
     <div class="tab on" id="tFeed" onclick="event.stopPropagation(); goView('feed')">Feed <span class="feed-dot" id="fDot"></span></div>
+    <div class="tab" id="tPin" onclick="event.stopPropagation(); goView('pin')">Pin</div>
   </div>
 
   <!-- ══ CAPTURE VIEW ══ -->
@@ -865,6 +874,16 @@
         <button class="clear-btn" onclick="clearDone()">Clear done</button>
       </div>
       <div class="list" id="theList"></div>
+    </div>
+  </div>
+
+  <!-- ══ PIN VIEW ══ -->
+  <div id="vPin" class="view">
+    <div class="feed-wrap">
+      <div class="feed-bar">
+        <div class="feed-stat" id="pinStat">0 pinned</div>
+      </div>
+      <div class="list" id="pinList"></div>
     </div>
   </div>
 
@@ -1033,6 +1052,7 @@
     }
     return p.then(function() {
       renderFeed();
+      renderPinView();
     }).catch(function(err) {
       console.error('Load error:', err);
       document.getElementById('feedStat').textContent = 'Could not load tasks';
@@ -1091,19 +1111,23 @@
     }
 
     var commentCls = t.has_comments ? ' commented' : '';
+    var pinnedCls = t.pinned ? ' pinned' : '';
     var urgLabel = t.urgent ? 'Remove urgent' : 'Make urgent';
     var urgItemCls = t.urgent ? 'km-item' : 'km-item urg-action';
+    var pinLabel = t.pinned ? 'Unpin' : 'Pin';
+    var pinIcon = t.pinned ? '<svg class="pin-icon" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 7h3l-5 7-5-7h3z"/></svg>' : '';
 
-    return '<div class="item' + urgCls + doneCls + commentCls + '" data-id="' + t.id + '">' +
+    return '<div class="item' + urgCls + doneCls + commentCls + pinnedCls + '" data-id="' + t.id + '">' +
       '<div class="cb' + tickCls + '" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\',' + !t.done + ')"></div>' +
       '<div class="item-body" onclick="openDetail(\'' + t.id + '\')">' +
         thumb +
-        '<div class="item-text' + strCls + '">' + esc(t.body) + '</div>' +
+        '<div class="item-text' + strCls + '">' + pinIcon + esc(t.body) + '</div>' +
         '<span class="item-time">' + (t.created_by ? '<span class="avatar-xs">' + esc(t.created_by.charAt(0).toUpperCase()) + '</span> ' : '') + (t.done ? 'Done ' + ts : ts) + '</span>' +
         '<button class="copy-btn" onclick="event.stopPropagation();copyTask(\'' + t.id + '\')" title="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
         '<button class="kebab" onclick="event.stopPropagation();toggleKebab(this)">⋯</button>' +
         '<div class="kebab-menu">' +
           '<button class="km-item" onclick="event.stopPropagation();editItem(\'' + t.id + '\')">Edit</button>' +
+          '<button class="km-item" onclick="event.stopPropagation();togglePin(\'' + t.id + '\',' + !t.pinned + ')">' + pinLabel + '</button>' +
           '<button class="' + urgItemCls + '" onclick="event.stopPropagation();toggleUrgent(\'' + t.id + '\',' + !t.urgent + ')">' + urgLabel + '</button>' +
           '<button class="km-item del" onclick="event.stopPropagation();deleteTask(\'' + t.id + '\')">Delete</button>' +
         '</div>' +
@@ -1248,6 +1272,35 @@
     });
   }
 
+  function togglePin(id, pinned) {
+    document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
+    var t = tasks.find(function(t) { return t.id === id; });
+    if (t) { t.pinned = pinned; renderFeed(); renderPinView(); }
+    api('/api/tasks?id=' + id, {
+      method: 'PATCH', body: JSON.stringify({ pinned: pinned })
+    }).catch(function() {
+      showToast('Error updating');
+      if (t) { t.pinned = !pinned; renderFeed(); renderPinView(); }
+    });
+  }
+
+  function renderPinView() {
+    var list = document.getElementById('pinList');
+    var pinned = tasks.filter(function(t) { return t.pinned; });
+    var sortFn = function(a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    };
+    pinned.sort(sortFn);
+    var html = '';
+    if (pinned.length) {
+      pinned.forEach(function(t) { html += renderItem(t); });
+    } else {
+      html = '<div style="text-align:center;padding:40px 0;color:#aaa;font-size:12px;">No pinned items yet — pin from the feed</div>';
+    }
+    list.innerHTML = html;
+    document.getElementById('pinStat').textContent = pinned.length + ' pinned';
+  }
+
   function deleteTask(id) {
     document.querySelectorAll('.kebab-menu.open').forEach(function(m) { m.classList.remove('open'); });
     // Optimistic: remove from local array and re-render
@@ -1255,10 +1308,10 @@
     var idx = -1;
     tasks.forEach(function(t, i) { if (t.id === id) { removed = t; idx = i; } });
     if (idx > -1) tasks.splice(idx, 1);
-    renderFeed();
+    renderFeed(); renderPinView();
     api('/api/tasks?id=' + id, { method: 'DELETE' }).catch(function() {
       showToast('Error deleting');
-      if (removed) { tasks.splice(idx, 0, removed); renderFeed(); }
+      if (removed) { tasks.splice(idx, 0, removed); renderFeed(); renderPinView(); }
     });
   }
 
@@ -1338,13 +1391,13 @@
     // Always close detail view when switching tabs
     document.getElementById('detailView').classList.remove('open');
     activeTaskId = null;
-    ['capture','feed'].forEach(function(v) {
+    ['capture','feed','pin'].forEach(function(v) {
       var cap = v.charAt(0).toUpperCase() + v.slice(1);
       document.getElementById('v'+cap).className = v === name ? 'view on' : 'view';
       document.getElementById('t'+cap).className = v === name ? 'tab on' : 'tab';
     });
-    document.getElementById('fab').className = name === 'feed' ? 'fab vis' : 'fab';
-    if (name === 'feed') loadTasks();
+    document.getElementById('fab').className = (name === 'feed' || name === 'pin') ? 'fab vis' : 'fab';
+    if (name === 'feed' || name === 'pin') loadTasks();
   }
 
   var labels = {type:'Add task', voice:'Record voice', camera:'Camera capture', gallery:'From gallery'};
